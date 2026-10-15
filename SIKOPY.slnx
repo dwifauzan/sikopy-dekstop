@@ -1,0 +1,11 @@
+﻿<Solution>
+  <Project Path="SIKOPY.Android/SIKOPY.Android.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="SIKOPY.Browser/SIKOPY.Browser.csproj" />
+  <Project Path="SIKOPY.Desktop/SIKOPY.Desktop.csproj" />
+  <Project Path="SIKOPY.iOS/SIKOPY.iOS.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="SIKOPY/SIKOPY.csproj" />
+</Solution>
