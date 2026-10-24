@@ -1,0 +1,696 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             xmlns:behaviors="using:SIKOPY.Behaviors"
+             mc:Ignorable="d" d:DesignWidth="1192" d:DesignHeight="900"
+             x:Class="SIKOPY.Views.RawMaterialsView"
+             x:DataType="vm:RawMaterialsViewModel"
+             Background="#F4F1EB">
+
+    <UserControl.DataTemplates>
+        <!-- How a bean type / processing method looks in every ComboBox on this screen. -->
+        <DataTemplate x:DataType="models:LookupItem">
+            <TextBlock Text="{Binding Name}" />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <UserControl.Styles>
+        <!-- ===== Cards ===== -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DFE6DF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- ===== Table ===== -->
+        <Style Selector="Border.tableHead">
+            <Setter Property="Background" Value="#F7F9F6" />
+            <Setter Property="BorderBrush" Value="#E3E9E2" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="50" />
+        </Style>
+        <Style Selector="Border.tableRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#EDF1EB" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="70" />
+        </Style>
+        <Style Selector="Border.tableRow.compact">
+            <Setter Property="Height" Value="52" />
+        </Style>
+        <Style Selector="Border.tableRow:pointerover">
+            <Setter Property="Background" Value="#F9FBF8" />
+        </Style>
+        <Style Selector="TextBlock.cell">
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#475C50" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.cell.name">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.cell.stock">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.cell.stock.low">
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge TextBlock">
+            <Setter Property="Foreground" Value="#2D614E" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.badge.outgoing">
+            <Setter Property="Background" Value="#FBEAE8" />
+        </Style>
+        <Style Selector="Border.badge.outgoing TextBlock">
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+
+        <!-- ===== Pagination ===== -->
+        <Style Selector="Button.pageButton">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Background" Value="#F3F4F6" />
+            <Setter Property="Foreground" Value="#667085" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.pageButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E5E7EB" />
+            <Setter Property="Foreground" Value="#344054" />
+        </Style>
+        <Style Selector="Button.pageButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F3F4F6" />
+            <Setter Property="Foreground" Value="#C4C9D2" />
+        </Style>
+        <Style Selector="Button.pageButton.current">
+            <Setter Property="Background" Value="#2D614E" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.pageButton.current:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#2D614E" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <!-- ===== Search & filters ===== -->
+        <Style Selector="ToggleButton.filterChip">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DCE5DC" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="#475C50" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ToggleButton.filterChip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#F3F6F2" />
+            <Setter Property="BorderBrush" Value="#C9D6CB" />
+            <Setter Property="Foreground" Value="#183B32" />
+        </Style>
+        <Style Selector="ToggleButton.filterChip:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#FBEAE8" />
+            <Setter Property="BorderBrush" Value="#F2C9C5" />
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+
+        <!-- ===== Status banner ===== -->
+        <Style Selector="Border.status">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="BorderBrush" Value="#CFE2D1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,8,8,8" />
+        </Style>
+        <Style Selector="Border.status TextBlock">
+            <Setter Property="Foreground" Value="#2D614E" />
+        </Style>
+        <Style Selector="Border.status.error">
+            <Setter Property="Background" Value="#FBEAE8" />
+            <Setter Property="BorderBrush" Value="#F2C9C5" />
+        </Style>
+        <Style Selector="Border.status.error TextBlock">
+            <Setter Property="Foreground" Value="#A8322A" />
+        </Style>
+
+        <!-- ===== Dialogs ===== -->
+        <Style Selector="Panel.backdrop">
+            <Setter Property="Background" Value="#80183B32" />
+        </Style>
+        <Style Selector="Border.dialog">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="24" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="BoxShadow" Value="0 12 40 0 #33183B32" />
+        </Style>
+        <Style Selector="Border.dialogHeader">
+            <Setter Property="Padding" Value="26,22,20,20" />
+            <Setter Property="BorderBrush" Value="#E8EEE8" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+        </Style>
+        <Style Selector="Border.dialogIcon">
+            <Setter Property="Background" Value="#E7D9BF" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="44" />
+        </Style>
+        <Style Selector="TextBlock.dialogSubtitle">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style Selector="Border.dialogInfo">
+            <Setter Property="Background" Value="#F1F7F0" />
+            <Setter Property="BorderBrush" Value="#D5E7D4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,11" />
+        </Style>
+        <Style Selector="TextBlock.dialogInfoText">
+            <Setter Property="Foreground" Value="#35614B" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="Border.dialogBody">
+            <Setter Property="Padding" Value="24,20,24,24" />
+        </Style>
+        <Style Selector="Border.dialogFooter">
+            <Setter Property="BorderBrush" Value="#E8EEE8" />
+            <Setter Property="BorderThickness" Value="0,1,0,0" />
+            <Setter Property="Padding" Value="24,16,24,20" />
+        </Style>
+        <Style Selector="TextBlock.dialogTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.unit">
+            <Setter Property="Foreground" Value="#849188" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="10,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="40,38" Spacing="20">
+
+                <!-- ===== Page intro ===== -->
+                <Grid ColumnDefinitions="*,Auto" MinHeight="72">
+                    <StackPanel Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Bahan Baku" Foreground="#183B32"
+                                   FontSize="30" FontWeight="Bold" />
+                        <TextBlock Text="Kelola stok dan harga green bean"
+                                   Foreground="#718279" FontSize="14" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="primary" VerticalAlignment="Center"
+                            Command="{Binding OpenCreateFormCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <PathIcon Data="{StaticResource IconPlus}" Width="20" Height="20" />
+                            <TextBlock Text="Tambah Green Bean" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- ===== Status banner ===== -->
+                <Border Classes="status" Classes.error="{Binding IsStatusError}"
+                        IsVisible="{Binding HasStatus}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="13"
+                                   TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Classes="iconAction" Background="Transparent"
+                                Content="✕" FontSize="12" ToolTip.Tip="Tutup"
+                                Command="{Binding DismissStatusCommand}" />
+                    </Grid>
+                </Border>
+
+                <!-- ===== Section heading ===== -->
+                <Grid ColumnDefinitions="*,Auto" Height="30">
+                    <TextBlock Classes="sectionTitle" Text="Daftar Green Bean" />
+                    <TextBlock Grid.Column="1" Classes="muted" Text="{Binding TotalCountText}" />
+                </Grid>
+
+                <!-- ===== Search & filters ===== -->
+                <Border Background="White" BorderBrush="#DFE6DF" BorderThickness="1"
+                        CornerRadius="10" Padding="10,7">
+                    <Grid ColumnDefinitions="*,180,180,Auto" ColumnSpacing="10">
+                        <TextBox Classes="field" Height="42" Padding="4,0,14,0"
+                                 Text="{Binding SearchText}"
+                                 PlaceholderText="Cari nama atau asal...">
+                            <TextBox.InnerLeftContent>
+                                <PathIcon Data="{StaticResource IconSearch}" Width="19" Height="19"
+                                          Foreground="#98A2B3" Margin="14,0,8,0" />
+                            </TextBox.InnerLeftContent>
+                        </TextBox>
+                        <ComboBox Grid.Column="1" Classes="field" Height="42"
+                                  ItemsSource="{Binding TypeFilterOptions}"
+                                  SelectedItem="{Binding SelectedTypeFilter}"
+                                  ToolTip.Tip="Filter jenis biji" />
+                        <ComboBox Grid.Column="2" Classes="field" Height="42"
+                                  ItemsSource="{Binding ProcessFilterOptions}"
+                                  SelectedItem="{Binding SelectedProcessFilter}"
+                                  ToolTip.Tip="Filter metode proses" />
+                        <ToggleButton Grid.Column="3" Classes="filterChip"
+                                      IsChecked="{Binding ShowLowStockOnly}"
+                                      Content="Stok menipis"
+                                      ToolTip.Tip="Tampilkan green bean dengan stok di bawah 50 kg" />
+                    </Grid>
+                </Border>
+
+                <!-- ===== Green bean table ===== -->
+                <Border Classes="card">
+                    <StackPanel>
+                        <ProgressBar IsIndeterminate="True" Height="3" MinHeight="3"
+                                     Foreground="#2D614E" Background="Transparent"
+                                     IsVisible="{Binding IsLoading}" />
+
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <StackPanel MinWidth="1100">
+                                <Border Classes="tableHead">
+                                    <Grid ColumnDefinitions="150,95,85,115,108,100,85,145,115,*">
+                                        <TextBlock Grid.Column="0" Classes="tableHeader" Text="NAMA" />
+                                        <TextBlock Grid.Column="1" Classes="tableHeader" Text="ASAL" />
+                                        <TextBlock Grid.Column="2" Classes="tableHeader" Text="JENIS" />
+                                        <TextBlock Grid.Column="3" Classes="tableHeader" Text="KETINGGIAN" />
+                                        <TextBlock Grid.Column="4" Classes="tableHeader" Text="PROSES" />
+                                        <TextBlock Grid.Column="5" Classes="tableHeader" Text="GRADE" />
+                                        <TextBlock Grid.Column="6" Classes="tableHeader" Text="STOK" />
+                                        <TextBlock Grid.Column="7" Classes="tableHeader" Text="HARGA / KG" />
+                                        <TextBlock Grid.Column="8" Classes="tableHeader" Text="PANEN" />
+                                        <TextBlock Grid.Column="9" Classes="tableHeader" Text="AKSI" />
+                                    </Grid>
+                                </Border>
+
+                                <ItemsControl ItemsSource="{Binding PageRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:RawMaterialRowViewModel">
+                                            <Border Classes="tableRow">
+                                                <Grid ColumnDefinitions="150,95,85,115,108,100,85,145,115,*">
+                                                    <TextBlock Grid.Column="0" Classes="cell name"
+                                                               Text="{Binding Material.Name}"
+                                                               ToolTip.Tip="{Binding Material.Name}" />
+                                                    <TextBlock Grid.Column="1" Classes="cell"
+                                                               Text="{Binding Material.OriginDisplay}" />
+                                                    <TextBlock Grid.Column="2" Classes="cell"
+                                                               Text="{Binding Material.TypeName}" />
+                                                    <TextBlock Grid.Column="3" Classes="cell"
+                                                               Text="{Binding Material.AltitudeDisplay}" />
+                                                    <TextBlock Grid.Column="4" Classes="cell"
+                                                               Text="{Binding Material.ProcessingMethodName}" />
+                                                    <Border Grid.Column="5" Classes="badge"
+                                                            IsVisible="{Binding Material.HasGrade}">
+                                                        <TextBlock Text="{Binding Material.GradeDisplay}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                    </Border>
+                                                    <TextBlock Grid.Column="5" Classes="cell" Text="-"
+                                                               IsVisible="{Binding !Material.HasGrade}" />
+                                                    <TextBlock Grid.Column="6" Classes="cell stock"
+                                                               Classes.low="{Binding Material.IsLowStock}"
+                                                               Text="{Binding Material.StockDisplay}" />
+                                                    <TextBlock Grid.Column="7" Classes="cell"
+                                                               Text="{Binding Material.PriceDisplay}" />
+                                                    <TextBlock Grid.Column="8" Classes="cell"
+                                                               Text="{Binding Material.HarvestDisplay}" />
+                                                    <StackPanel Grid.Column="9" Orientation="Horizontal"
+                                                                Spacing="6" Margin="10,0"
+                                                                VerticalAlignment="Center">
+                                                        <Button Classes="iconAction" ToolTip.Tip="Ubah data"
+                                                                Command="{Binding EditCommand}">
+                                                            <PathIcon Data="{StaticResource IconPencil}"
+                                                                      Width="14" Height="14" />
+                                                        </Button>
+                                                        <Button Classes="iconAction" ToolTip.Tip="Aksi lainnya">
+                                                            <PathIcon Data="{StaticResource IconEllipsis}"
+                                                                      Width="15" Height="15" />
+                                                            <Button.Flyout>
+                                                                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                                                    <MenuItem Header="Tambah stok masuk"
+                                                                              Command="{Binding AddStockCommand}">
+                                                                        <MenuItem.Icon>
+                                                                            <PathIcon Data="{StaticResource IconPlus}" />
+                                                                        </MenuItem.Icon>
+                                                                    </MenuItem>
+                                                                    <MenuItem Header="Ubah data"
+                                                                              Command="{Binding EditCommand}">
+                                                                        <MenuItem.Icon>
+                                                                            <PathIcon Data="{StaticResource IconPencil}" />
+                                                                        </MenuItem.Icon>
+                                                                    </MenuItem>
+                                                                    <Separator />
+                                                                    <MenuItem Header="Nonaktifkan"
+                                                                              Foreground="#C63D34"
+                                                                              Command="{Binding DeactivateCommand}" />
+                                                                </MenuFlyout>
+                                                            </Button.Flyout>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Empty state -->
+                        <StackPanel Spacing="12" Margin="24,36" HorizontalAlignment="Center">
+                            <StackPanel.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="HasNoResults" />
+                                    <Binding Path="!IsLoading" />
+                                </MultiBinding>
+                            </StackPanel.IsVisible>
+                            <PathIcon Data="{StaticResource IconPackage}" Width="32" Height="32"
+                                      Foreground="#ABC5B4" />
+                            <TextBlock Text="{Binding EmptyMessage}" Foreground="#718279"
+                                       FontSize="13" TextAlignment="Center" TextWrapping="Wrap" />
+                            <Button Classes="secondary" HorizontalAlignment="Center" Height="36"
+                                    Content="Reset filter" Command="{Binding ClearFiltersCommand}"
+                                    IsVisible="{Binding HasMaterials}" />
+                        </StackPanel>
+
+                        <!-- Footer: result count & pagination -->
+                        <Border BorderBrush="#EDF1EB" BorderThickness="0,1,0,0"
+                                Height="48" Padding="16,0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="muted" Text="{Binding ResultSummary}" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5"
+                                            VerticalAlignment="Center">
+                                    <Button Classes="pageButton" Content="‹" ToolTip.Tip="Sebelumnya"
+                                            Command="{Binding PreviousPageCommand}" />
+                                    <ItemsControl ItemsSource="{Binding Pages}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="5" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:PageItem">
+                                                <Button Classes="pageButton"
+                                                        Classes.current="{Binding IsCurrent}"
+                                                        Content="{Binding Number}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:RawMaterialsViewModel)DataContext).GoToPageCommand}"
+                                                        CommandParameter="{Binding Number}" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Classes="pageButton" Content="›" ToolTip.Tip="Berikutnya"
+                                            Command="{Binding NextPageCommand}" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ===== Stock history ===== -->
+                <Grid ColumnDefinitions="*,Auto" Height="30" Margin="0,8,0,0">
+                    <TextBlock Classes="sectionTitle" Text="Riwayat Stok Terbaru" />
+                    <TextBlock Grid.Column="1" Classes="muted" Text="10 transaksi terakhir" />
+                </Grid>
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="tableHead">
+                            <Grid ColumnDefinitions="180,2*,110,130,3*">
+                                <TextBlock Grid.Column="0" Classes="tableHeader" Text="TANGGAL" />
+                                <TextBlock Grid.Column="1" Classes="tableHeader" Text="GREEN BEAN" />
+                                <TextBlock Grid.Column="2" Classes="tableHeader" Text="ARAH" />
+                                <TextBlock Grid.Column="3" Classes="tableHeader" Text="JUMLAH" />
+                                <TextBlock Grid.Column="4" Classes="tableHeader" Text="REFERENSI" />
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding StockHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:StockHistoryEntry">
+                                    <Border Classes="tableRow compact">
+                                        <Grid ColumnDefinitions="180,2*,110,130,3*">
+                                            <TextBlock Grid.Column="0" Classes="cell"
+                                                       Text="{Binding OccurredAtDisplay}" />
+                                            <TextBlock Grid.Column="1" Classes="cell name"
+                                                       Text="{Binding MaterialName}" />
+                                            <Border Grid.Column="2" Classes="badge"
+                                                    Classes.outgoing="{Binding !IsIncoming}">
+                                                <TextBlock Text="{Binding Direction}" />
+                                            </Border>
+                                            <TextBlock Grid.Column="3" Classes="cell stock"
+                                                       Text="{Binding QuantityDisplay}" />
+                                            <TextBlock Grid.Column="4" Classes="cell"
+                                                       Text="{Binding ReferenceDisplay}"
+                                                       ToolTip.Tip="{Binding ReferenceDisplay}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="16,20" Text="Belum ada riwayat stok."
+                                   Foreground="#718279" FontSize="13"
+                                   IsVisible="{Binding !HasHistory}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ===== Add / edit green bean dialog ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsFormOpen}">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+                <Border Classes="dialog" Width="720">
+                    <StackPanel>
+                        <Border Classes="dialogHeader">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                <Border Classes="dialogIcon">
+                                    <PathIcon Data="{StaticResource IconPackage}"
+                                              Width="23" Height="23"
+                                              Foreground="#183B32"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Classes="dialogTitle" Text="{Binding FormTitle}" />
+                                    <TextBlock Classes="dialogSubtitle"
+                                               Text="Tambahkan data green bean ke inventori bahan baku." />
+                                </StackPanel>
+                                <Button Grid.Column="2" Classes="iconAction"
+                                        Content="✕" FontSize="14"
+                                        ToolTip.Tip="Tutup"
+                                        Command="{Binding CancelFormCommand}" />
+                            </Grid>
+                        </Border>
+
+                        <Border Classes="dialogBody">
+                            <StackPanel Spacing="18">
+                                <Border Classes="dialogInfo">
+                                    <TextBlock Classes="dialogInfoText"
+                                               Text="Data jenis biji dan metode proses yang belum tersedia akan ditambahkan otomatis ke data master. Kolom bertanda * wajib diisi." />
+                                </Border>
+
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                                      ColumnSpacing="16" RowSpacing="14">
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2">
+                                <TextBlock Classes="fieldLabel" Text="Nama green bean *" />
+                                <TextBox Classes="field" Text="{Binding FormName}"
+                                         MaxLength="100" PlaceholderText="mis. Aceh Gayo" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <TextBlock Classes="fieldLabel" Text="Jenis biji *" />
+                                <ComboBox Classes="field" IsEditable="True"
+                                          behaviors:ComboBoxBehaviors.OpenDropDownOnClick="True"
+                                          MaxDropDownHeight="240"
+                                          PlaceholderText="Pilih atau ketik jenis baru"
+                                          ItemsSource="{Binding Types}"
+                                          SelectedItem="{Binding SelectedFormType, Mode=TwoWay}"
+                                          Text="{Binding FormTypeName, Mode=TwoWay}" />
+                                <TextBlock Classes="muted" Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Text="Belum ada data jenis biji. Ketik nama jenis baru untuk menambahkannya.">
+                                    <TextBlock.IsVisible>
+                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                            <Binding Path="!HasTypes" />
+                                            <Binding Path="FormTypeName" Converter="{x:Static StringConverters.IsNullOrEmpty}" />
+                                        </MultiBinding>
+                                    </TextBlock.IsVisible>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <TextBlock Classes="fieldLabel" Text="Metode proses *" />
+                                <ComboBox Classes="field" IsEditable="True"
+                                          behaviors:ComboBoxBehaviors.OpenDropDownOnClick="True"
+                                          MaxDropDownHeight="240"
+                                          PlaceholderText="Pilih atau ketik proses baru"
+                                          ItemsSource="{Binding ProcessingMethods}"
+                                          SelectedItem="{Binding SelectedFormProcessingMethod, Mode=TwoWay}"
+                                          Text="{Binding FormProcessingMethodName, Mode=TwoWay}" />
+                                <TextBlock Classes="muted" Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Text="Belum ada data metode proses. Ketik nama proses baru untuk menambahkannya.">
+                                    <TextBlock.IsVisible>
+                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                            <Binding Path="!HasProcessingMethods" />
+                                            <Binding Path="FormProcessingMethodName" Converter="{x:Static StringConverters.IsNullOrEmpty}" />
+                                        </MultiBinding>
+                                    </TextBlock.IsVisible>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0">
+                                <TextBlock Classes="fieldLabel" Text="Asal daerah" />
+                                <TextBox Classes="field" Text="{Binding FormOrigin}"
+                                         MaxLength="100" PlaceholderText="mis. Aceh" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="1">
+                                <TextBlock Classes="fieldLabel" Text="Ketinggian" />
+                                <TextBox Classes="field" Text="{Binding FormAltitude}"
+                                         PlaceholderText="mis. 1400">
+                                    <TextBox.InnerRightContent>
+                                        <TextBlock Classes="unit" Text="mdpl" />
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="3" Grid.Column="0">
+                                <TextBlock Classes="fieldLabel" Text="Grade / kualitas" />
+                                <TextBox Classes="field" Text="{Binding FormGrade}"
+                                         MaxLength="50" PlaceholderText="mis. Specialty, Grade 1" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="3" Grid.Column="1">
+                                <TextBlock Classes="fieldLabel" Text="Harga per kg *" />
+                                <TextBox Classes="field" Text="{Binding FormPrice}"
+                                         PlaceholderText="mis. 200.000">
+                                    <TextBox.InnerLeftContent>
+                                        <TextBlock Classes="unit" Text="Rp" Margin="10,0,0,0" />
+                                    </TextBox.InnerLeftContent>
+                                </TextBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="4" Grid.Column="0">
+                                <TextBlock Classes="fieldLabel" Text="Tanggal panen" />
+                                <CalendarDatePicker Classes="field"
+                                                    SelectedDate="{Binding FormHarvestDate}"
+                                                    PlaceholderText="Pilih tanggal"
+                                                    SelectedDateFormat="Custom"
+                                                    CustomDateFormatString="dd MMM yyyy" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="4" Grid.Column="1" IsVisible="{Binding !IsEditing}">
+                                <TextBlock Classes="fieldLabel" Text="Stok awal" />
+                                <TextBox Classes="field" Text="{Binding FormInitialStock}"
+                                         PlaceholderText="mis. 25,5">
+                                    <TextBox.InnerRightContent>
+                                        <TextBlock Classes="unit" Text="kg" />
+                                    </TextBox.InnerRightContent>
+                                </TextBox>
+                            </StackPanel>
+                            <TextBlock Grid.Row="4" Grid.Column="1" IsVisible="{Binding IsEditing}"
+                                       Classes="muted" TextWrapping="Wrap" VerticalAlignment="Bottom"
+                                       Margin="0,0,0,4"
+                                       Text="Stok diubah lewat menu ⋯ → Tambah stok masuk agar tercatat di riwayat." />
+                                </Grid>
+
+                                <TextBlock Classes="formError" Text="{Binding FormError}"
+                                           IsVisible="{Binding FormError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="dialogFooter">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                                <Button Classes="secondary" Content="Batal" Command="{Binding CancelFormCommand}" />
+                                <Button Classes="primary" Content="Simpan green bean"
+                                        Command="{Binding SaveFormCommand}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </Panel>
+
+        <!-- ===== Incoming stock dialog ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsStockDialogOpen}">
+            <Border Classes="dialog" Width="460">
+                <StackPanel Spacing="18">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="dialogTitle" Text="Tambah Stok Masuk" />
+                        <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap">
+                            <Run Text="{Binding StockTarget.Name}" FontWeight="SemiBold" Foreground="#183B32" />
+                            <Run Text="{Binding StockTarget.StockDisplay, StringFormat=' · stok saat ini {0}'}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="fieldLabel" Text="Jumlah masuk *" />
+                        <TextBox Classes="field" Text="{Binding StockQuantity}"
+                                 PlaceholderText="mis. 25,5">
+                            <TextBox.InnerRightContent>
+                                <TextBlock Classes="unit" Text="kg" />
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Classes="fieldLabel" Text="Referensi" />
+                        <TextBox Classes="field" Text="{Binding StockReference}" MaxLength="100"
+                                 PlaceholderText="mis. no. surat jalan atau nama supplier" />
+                    </StackPanel>
+
+                    <TextBlock Classes="formError" Text="{Binding StockError}"
+                               IsVisible="{Binding StockError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="secondary" Content="Batal" Command="{Binding CancelStockCommand}" />
+                        <Button Classes="primary" Content="Simpan stok" Command="{Binding SaveStockCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- ===== Deactivate confirmation ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsDeactivateDialogOpen}">
+            <Border Classes="dialog" Width="440">
+                <StackPanel Spacing="18">
+                    <TextBlock Classes="dialogTitle" Text="Nonaktifkan green bean?" />
+                    <TextBlock FontSize="13" Foreground="#475C50" TextWrapping="Wrap">
+                        <Run Text="{Binding DeactivationTarget.Name}" FontWeight="SemiBold" />
+                        <Run Text=" akan disembunyikan dari daftar. Riwayat stoknya tetap tersimpan." />
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="secondary" Content="Batal" Command="{Binding CancelDeactivateCommand}" />
+                        <Button Classes="danger" Content="Nonaktifkan" Command="{Binding ConfirmDeactivateCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Grid>
+</UserControl>

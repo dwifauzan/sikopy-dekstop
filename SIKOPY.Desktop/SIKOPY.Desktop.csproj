@@ -18,4 +18,10 @@
     <ItemGroup>
         <ProjectReference Include="..\SIKOPY\SIKOPY.csproj"/>
     </ItemGroup>
+
+    <!-- Local, git-ignored database settings (see database/README.md). -->
+    <ItemGroup>
+        <None Include="database.local.json" Condition="Exists('database.local.json')"
+              CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>

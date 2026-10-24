@@ -7,6 +7,8 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="SIKOPY.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="SIKOPY">
+        Title="SIKOPY"
+        Width="1440" Height="900" MinWidth="1024" MinHeight="640"
+        WindowStartupLocation="CenterScreen">
         <views:MainView />
 </Window>
