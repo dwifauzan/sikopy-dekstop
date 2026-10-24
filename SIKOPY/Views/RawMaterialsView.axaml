@@ -579,7 +579,8 @@
                             <StackPanel Grid.Row="2" Grid.Column="1">
                                 <TextBlock Classes="fieldLabel" Text="Ketinggian" />
                                 <TextBox Classes="field" Text="{Binding FormAltitude}"
-                                         PlaceholderText="mis. 1400">
+                                         behaviors:InputBehaviors.AllowedCharacters="0123456789"
+                                         MaxLength="4" PlaceholderText="mis. 1400">
                                     <TextBox.InnerRightContent>
                                         <TextBlock Classes="unit" Text="mdpl" />
                                     </TextBox.InnerRightContent>
@@ -594,7 +595,8 @@
                             <StackPanel Grid.Row="3" Grid.Column="1">
                                 <TextBlock Classes="fieldLabel" Text="Harga per kg *" />
                                 <TextBox Classes="field" Text="{Binding FormPrice}"
-                                         PlaceholderText="mis. 200.000">
+                                         behaviors:InputBehaviors.AllowedCharacters="0123456789.,"
+                                         MaxLength="20" PlaceholderText="mis. 200.000">
                                     <TextBox.InnerLeftContent>
                                         <TextBlock Classes="unit" Text="Rp" Margin="10,0,0,0" />
                                     </TextBox.InnerLeftContent>
@@ -605,14 +607,16 @@
                                 <TextBlock Classes="fieldLabel" Text="Tanggal panen" />
                                 <CalendarDatePicker Classes="field"
                                                     SelectedDate="{Binding FormHarvestDate}"
-                                                    PlaceholderText="Pilih tanggal"
+                                                    behaviors:InputBehaviors.AllowedCharacters="0123456789/"
+                                                    PlaceholderText="dd/mm/yyyy"
                                                     SelectedDateFormat="Custom"
-                                                    CustomDateFormatString="dd MMM yyyy" />
+                                                    CustomDateFormatString="dd/MM/yyyy" />
                             </StackPanel>
                             <StackPanel Grid.Row="4" Grid.Column="1" IsVisible="{Binding !IsEditing}">
                                 <TextBlock Classes="fieldLabel" Text="Stok awal" />
                                 <TextBox Classes="field" Text="{Binding FormInitialStock}"
-                                         PlaceholderText="mis. 25,5">
+                                         behaviors:InputBehaviors.AllowedCharacters="0123456789.,"
+                                         MaxLength="15" PlaceholderText="mis. 25,5">
                                     <TextBox.InnerRightContent>
                                         <TextBlock Classes="unit" Text="kg" />
                                     </TextBox.InnerRightContent>
@@ -656,7 +660,8 @@
                     <StackPanel>
                         <TextBlock Classes="fieldLabel" Text="Jumlah masuk *" />
                         <TextBox Classes="field" Text="{Binding StockQuantity}"
-                                 PlaceholderText="mis. 25,5">
+                                 behaviors:InputBehaviors.AllowedCharacters="0123456789.,"
+                                 MaxLength="15" PlaceholderText="mis. 25,5">
                             <TextBox.InnerRightContent>
                                 <TextBlock Classes="unit" Text="kg" />
                             </TextBox.InnerRightContent>

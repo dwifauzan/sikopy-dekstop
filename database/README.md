@@ -138,6 +138,11 @@ Every stock increase, including the initial stock, is written to `riwayat_stok`
 in the same PostgreSQL transaction as the stock update. Editing a green bean
 never changes its stock directly.
 
+Number fields (**Ketinggian**, **Harga per kg**, **Stok awal**, **Jumlah
+masuk**) only accept digits, plus `.` and `,` for price and stock; letters are
+blocked when typed and removed when pasted. **Tanggal panen** accepts digits
+and `/` only and is entered as `dd/mm/yyyy` (or picked from the calendar).
+
 In the add/edit form, **Jenis** and **Proses** can be picked from the list or
 typed. A name that does not exist yet (compared ignoring case) is inserted into
 `jenis_biji_kopi_mentah` or `metode_proses` in the same transaction as the
