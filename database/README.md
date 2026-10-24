@@ -129,6 +129,9 @@ employees. It can:
 - add a green bean (with an optional initial stock) and edit its details;
 - add incoming stock in kilograms from the row's **⋯** menu;
 - deactivate a green bean (`is_aktif = FALSE`), which keeps its history;
+- permanently delete a green bean (**⋯ → Hapus permanen**). Its `riwayat_stok`
+  rows are deleted in the same transaction. Deleting is refused while any
+  `batch_roasting` row uses the bean; deactivate it instead;
 - show the 10 most recent stock movements.
 
 Every stock increase, including the initial stock, is written to `riwayat_stok`

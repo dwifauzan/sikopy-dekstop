@@ -16,6 +16,12 @@ public static class DatabaseErrorMessage
         InvalidOperationException { Message: var message } when message.Contains(PostgresConnectionFactory.LocalSettingsFileName, StringComparison.Ordinal) =>
             $"File {PostgresConnectionFactory.LocalSettingsFileName} tidak valid. Periksa penulisan JSON-nya.",
 
+        RawMaterialInUseException { BatchCount: var count } =>
+            $"Green bean ini sudah dipakai di {count} batch roasting sehingga tidak bisa dihapus. " +
+            "Gunakan \"Nonaktifkan\" untuk menyembunyikannya.",
+        InvalidOperationException { Message: var message } when message.StartsWith("The selected raw material does not exist", StringComparison.Ordinal) =>
+            "Green bean tidak ditemukan atau sudah tidak aktif. Muat ulang daftar.",
+
         PostgresException { SqlState: "3D000" } =>
             "Database tidak ditemukan. Periksa nama database pada koneksi.",
         PostgresException { SqlState: "28P01" or "28000" } =>

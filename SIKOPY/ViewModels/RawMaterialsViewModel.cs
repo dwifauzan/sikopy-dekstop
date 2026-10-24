@@ -106,9 +106,16 @@ public partial class RawMaterialsViewModel : ViewModelBase
     [ObservableProperty] public partial RawMaterial? DeactivationTarget { get; set; }
     public bool IsDeactivateDialogOpen => DeactivationTarget is not null;
 
+    // ---------- Delete confirmation ----------
+
+    [ObservableProperty] public partial RawMaterial? DeletionTarget { get; set; }
+    [ObservableProperty] public partial string DeleteError { get; set; } = string.Empty;
+    public bool IsDeleteDialogOpen => DeletionTarget is not null;
+
     partial void OnStatusMessageChanged(string value) => OnPropertyChanged(nameof(HasStatus));
     partial void OnStockTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsStockDialogOpen));
     partial void OnDeactivationTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsDeactivateDialogOpen));
+    partial void OnDeletionTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsDeleteDialogOpen));
 
     partial void OnStockQuantityChanged(string value) => StockError = string.Empty;
     partial void OnFormNameChanged(string value) => FormError = string.Empty;
@@ -428,6 +435,37 @@ public partial class RawMaterialsViewModel : ViewModelBase
         }
     }
 
+    // ---------- Delete ----------
+
+    private void RequestDeletion(RawMaterial material)
+    {
+        DeleteError = string.Empty;
+        DeletionTarget = material;
+    }
+
+    [RelayCommand]
+    private void CancelDelete() => DeletionTarget = null;
+
+    [RelayCommand]
+    private async Task ConfirmDeleteAsync(CancellationToken cancellationToken = default)
+    {
+        if (DeletionTarget is not { } material)
+            return;
+
+        try
+        {
+            await _repository.DeleteAsync(material.Id, cancellationToken);
+            DeletionTarget = null;
+            ShowSuccess($"{material.Name} berhasil dihapus.");
+            await LoadAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            // Keep the dialog open so the user can read why and choose "Nonaktifkan" instead.
+            DeleteError = $"Gagal menghapus: {DatabaseErrorMessage.Describe(exception)}";
+        }
+    }
+
     // ---------- Helpers ----------
 
     private void ReplaceLookups(IReadOnlyList<LookupItem> types, IReadOnlyList<LookupItem> methods)
@@ -526,7 +564,8 @@ public partial class RawMaterialsViewModel : ViewModelBase
 
         PageRows.Clear();
         foreach (var material in _filteredMaterials.Skip((CurrentPage - 1) * PageSize).Take(PageSize))
-            PageRows.Add(new RawMaterialRowViewModel(material, OpenEditFormAsync, OpenStockDialog, RequestDeactivation));
+            PageRows.Add(new RawMaterialRowViewModel(
+                material, OpenEditFormAsync, OpenStockDialog, RequestDeactivation, RequestDeletion));
 
         Pages.Clear();
         for (var page = 1; page <= PageCount; page++)

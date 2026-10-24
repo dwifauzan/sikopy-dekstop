@@ -205,6 +205,67 @@ public sealed class RawMaterialRepository
                 "The selected raw material does not exist or is already inactive.");
     }
 
+    /// <summary>
+    /// Permanently deletes a raw material and its own stock history, in one
+    /// transaction. Refused with <see cref="RawMaterialInUseException"/> when a
+    /// roasting batch uses it, since deleting it would break that batch.
+    /// </summary>
+    public async Task DeleteAsync(
+        int rawMaterialId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection =
+            await PostgresConnectionFactory.OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(
+            cancellationToken);
+
+        try
+        {
+            // Lock the row so no batch can start using it before it is deleted.
+            await using var lockCommand = connection.CreateCommand();
+            lockCommand.Transaction = transaction;
+            lockCommand.CommandText = """
+                SELECT 1 FROM biji_kopi_mentah
+                WHERE id_biji_mentah = $1 AND is_aktif = TRUE
+                FOR UPDATE;
+                """;
+            lockCommand.Parameters.AddWithValue(rawMaterialId);
+            if (await lockCommand.ExecuteScalarAsync(cancellationToken) is null)
+                throw new InvalidOperationException(
+                    "The selected raw material does not exist or is inactive.");
+
+            await using var usageCommand = connection.CreateCommand();
+            usageCommand.Transaction = transaction;
+            usageCommand.CommandText =
+                "SELECT COUNT(*) FROM batch_roasting WHERE id_biji_mentah = $1;";
+            usageCommand.Parameters.AddWithValue(rawMaterialId);
+            var batchCount = (long)(await usageCommand.ExecuteScalarAsync(cancellationToken))!;
+            if (batchCount > 0)
+                throw new RawMaterialInUseException(batchCount);
+
+            await using var historyCommand = connection.CreateCommand();
+            historyCommand.Transaction = transaction;
+            historyCommand.CommandText =
+                "DELETE FROM riwayat_stok WHERE id_biji_mentah = $1;";
+            historyCommand.Parameters.AddWithValue(rawMaterialId);
+            await historyCommand.ExecuteNonQueryAsync(cancellationToken);
+
+            await using var deleteCommand = connection.CreateCommand();
+            deleteCommand.Transaction = transaction;
+            deleteCommand.CommandText =
+                "DELETE FROM biji_kopi_mentah WHERE id_biji_mentah = $1;";
+            deleteCommand.Parameters.AddWithValue(rawMaterialId);
+            await deleteCommand.ExecuteNonQueryAsync(cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
     public async Task AddIncomingStockAsync(
         int rawMaterialId,
         decimal quantityKilograms,

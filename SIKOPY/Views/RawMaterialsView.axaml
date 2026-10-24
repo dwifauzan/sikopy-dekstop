@@ -360,22 +360,25 @@
                                                                       Width="15" Height="15" />
                                                             <Button.Flyout>
                                                                 <MenuFlyout Placement="BottomEdgeAlignedRight">
-                                                                    <MenuItem Header="Tambah stok masuk"
-                                                                              Command="{Binding AddStockCommand}">
-                                                                        <MenuItem.Icon>
-                                                                            <PathIcon Data="{StaticResource IconPlus}" />
-                                                                        </MenuItem.Icon>
-                                                                    </MenuItem>
-                                                                    <MenuItem Header="Ubah data"
-                                                                              Command="{Binding EditCommand}">
-                                                                        <MenuItem.Icon>
-                                                                            <PathIcon Data="{StaticResource IconPencil}" />
-                                                                        </MenuItem.Icon>
-                                                                    </MenuItem>
-                                                                    <Separator />
-                                                                    <MenuItem Header="Nonaktifkan"
+                                                                    <!-- <MenuItem Header="Tambah stok masuk" -->
+                                                                    <!--           Command="{Binding AddStockCommand}"> -->
+                                                                    <!--     <MenuItem.Icon> -->
+                                                                    <!--         <PathIcon Data="{StaticResource IconPlus}" /> -->
+                                                                    <!--     </MenuItem.Icon> -->
+                                                                    <!-- </MenuItem> -->
+                                                                    <!-- <MenuItem Header="Ubah data" -->
+                                                                    <!--           Command="{Binding EditCommand}"> -->
+                                                                    <!--     <MenuItem.Icon> -->
+                                                                    <!--         <PathIcon Data="{StaticResource IconPencil}" /> -->
+                                                                    <!--     </MenuItem.Icon> -->
+                                                                    <!-- </MenuItem> -->
+                                                                    <!-- <Separator /> -->
+                                                                    <!-- <MenuItem Header="Nonaktifkan" -->
+                                                                    <!--           Foreground="#C63D34" -->
+                                                                    <!--           Command="{Binding DeactivateCommand}" /> -->
+                                                                    <MenuItem Header="Hapus permanen"
                                                                               Foreground="#C63D34"
-                                                                              Command="{Binding DeactivateCommand}" />
+                                                                              Command="{Binding DeleteCommand}" />
                                                                 </MenuFlyout>
                                                             </Button.Flyout>
                                                         </Button>
@@ -641,7 +644,7 @@
         <!-- ===== Incoming stock dialog ===== -->
         <Panel Classes="backdrop" IsVisible="{Binding IsStockDialogOpen}">
             <Border Classes="dialog" Width="460">
-                <StackPanel Spacing="18">
+                <StackPanel Spacing="18" Margin="26,24">
                     <StackPanel Spacing="4">
                         <TextBlock Classes="dialogTitle" Text="Tambah Stok Masuk" />
                         <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap">
@@ -679,15 +682,38 @@
         <!-- ===== Deactivate confirmation ===== -->
         <Panel Classes="backdrop" IsVisible="{Binding IsDeactivateDialogOpen}">
             <Border Classes="dialog" Width="440">
-                <StackPanel Spacing="18">
+                <StackPanel Spacing="18" Margin="26,24">
                     <TextBlock Classes="dialogTitle" Text="Nonaktifkan green bean?" />
                     <TextBlock FontSize="13" Foreground="#475C50" TextWrapping="Wrap">
                         <Run Text="{Binding DeactivationTarget.Name}" FontWeight="SemiBold" />
-                        <Run Text=" akan disembunyikan dari daftar. Riwayat stoknya tetap tersimpan." />
+                        <Run Text="akan disembunyikan dari daftar. Riwayat stoknya tetap tersimpan." />
                     </TextBlock>
                     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
                         <Button Classes="secondary" Content="Batal" Command="{Binding CancelDeactivateCommand}" />
                         <Button Classes="danger" Content="Nonaktifkan" Command="{Binding ConfirmDeactivateCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- ===== Delete confirmation ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsDeleteDialogOpen}">
+            <Border Classes="dialog" Width="460">
+                <StackPanel Spacing="18" Margin="26,24">
+                    <TextBlock Classes="dialogTitle" Text="Hapus green bean?" />
+                    <TextBlock FontSize="13" Foreground="#475C50" TextWrapping="Wrap">
+                        <Run Text="{Binding DeletionTarget.Name}" FontWeight="SemiBold" />
+                        <Run Text="beserta seluruh riwayat stoknya akan dihapus permanen dan tidak dapat dikembalikan." />
+                    </TextBlock>
+                    <TextBlock FontSize="12" Foreground="#718279" TextWrapping="Wrap"
+                               Text="Jika hanya ingin menyembunyikannya dari daftar, gunakan &quot;Nonaktifkan&quot;." />
+
+                    <TextBlock Classes="formError" Text="{Binding DeleteError}"
+                               IsVisible="{Binding DeleteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="secondary" Content="Batal" Command="{Binding CancelDeleteCommand}" />
+                        <Button Classes="danger" Content="Hapus permanen" Command="{Binding ConfirmDeleteCommand}" />
                     </StackPanel>
                 </StackPanel>
             </Border>
