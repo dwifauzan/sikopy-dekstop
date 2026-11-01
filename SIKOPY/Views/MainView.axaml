@@ -72,13 +72,13 @@
                             <TextBlock Text="Dashboard" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem active">
+                    <Border x:Name="NavRawMaterials" Classes="navItem active" Tapped="NavRawMaterials_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconPackage}" />
                             <TextBlock Text="Bahan Baku" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir">
+                    <Border x:Name="NavRoasting" Classes="navItem" Tapped="NavRoasting_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconFlame}" />
                             <TextBlock Text="Batch Roasting" />
@@ -122,6 +122,6 @@
         </Border>
 
         <!-- ===== Current screen ===== -->
-        <ContentControl Grid.Column="1" Content="{Binding RawMaterials}" />
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
     </Grid>
 </UserControl>

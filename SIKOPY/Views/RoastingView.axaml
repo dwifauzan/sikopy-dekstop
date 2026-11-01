@@ -1,0 +1,305 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             x:Class="SIKOPY.Views.RoastingView"
+             x:DataType="vm:RoastingViewModel">
+
+  <Grid>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="40,38" Spacing="20">
+
+        <!-- ===== Judul + tombol ===== -->
+        <Grid ColumnDefinitions="*,auto" MinHeight="72">
+          <StackPanel Spacing="6" VerticalAlignment="Center">
+            <TextBlock Text="Batch Roasting" Foreground="#183B32" FontSize="30" FontWeight="Bold"/>
+            <TextBlock Text="Pantau proses sangrai, hasil, dan susut setiap batch" Foreground="#718279" FontSize="14" />
+          </StackPanel>
+
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="9">
+            <Button Classes="primary" VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <PathIcon Data="{StaticResource IconPencil}" Width="20" Height="20" />
+                <TextBlock Text="Edit Harga Roast Bean" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+
+            <Button Classes="primary" VerticalAlignment="Center"
+                    Command="{Binding OpenFormCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="9">
+                <PathIcon Data="{StaticResource IconPlus}" Width="20" Height="20" />
+                <TextBlock Text="Tambah Batch" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <!-- ===== Pesan status ===== -->
+        <TextBlock Text="{Binding StatusMessage}" Foreground="#183B32" TextWrapping="Wrap"
+                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <!-- ===== Tiga kartu statistik ===== -->
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+
+          <Border Grid.Column="0" Background="White" Padding="16" CornerRadius="16">
+            <Grid ColumnDefinitions="*,auto" MinHeight="64">
+              <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Batch bulan ini" Foreground="#718279" FontSize="12"/>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding MonthBatchCount}" FontWeight="Bold" FontSize="26" Foreground="#183B32"/>
+                  <TextBlock Text="batch" Foreground="#718279" VerticalAlignment="Bottom" Margin="0,0,0,4" FontSize="12"/>
+                </StackPanel>
+              </StackPanel>
+              <PathIcon Grid.Column="1" Data="{StaticResource IconFlame}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <Border Grid.Column="1" Background="White" Padding="16" CornerRadius="16">
+            <Grid ColumnDefinitions="*,auto" MinHeight="64">
+              <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Green bean digunakan" Foreground="#718279" FontSize="12"/>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding MonthGreenBeanText}" FontWeight="Bold" FontSize="26" Foreground="#183B32"/>
+                  <TextBlock Text="kg" Foreground="#718279" VerticalAlignment="Bottom" Margin="0,0,0,4" FontSize="12"/>
+                </StackPanel>
+              </StackPanel>
+              <PathIcon Grid.Column="1" Data="{StaticResource IconPackage}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <Border Grid.Column="2" Background="White" Padding="16" CornerRadius="16">
+            <Grid ColumnDefinitions="*,auto" MinHeight="64">
+              <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Roast bean dihasilkan" Foreground="#718279" FontSize="12"/>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Text="{Binding MonthRoastedText}" FontWeight="Bold" FontSize="26" Foreground="#183B32"/>
+                  <TextBlock Text="kg" Foreground="#718279" VerticalAlignment="Bottom" Margin="0,0,0,4" FontSize="12"/>
+                </StackPanel>
+              </StackPanel>
+              <PathIcon Grid.Column="1" Data="{StaticResource IconCoffee}" VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+        </Grid>
+
+        <!-- ===== Pencarian + filter level ===== -->
+        <Grid ColumnDefinitions="*,auto" ColumnSpacing="16">
+          <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="14,4">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <PathIcon Data="{StaticResource IconEllipsis}" Width="16" Height="16" Foreground="#718279" />
+              <TextBox MinWidth="400" Background="Transparent" BorderThickness="0"
+                       VerticalAlignment="Center"
+                       PlaceholderText="Cari kode batch atau nama biji..."
+                       Text="{Binding SearchText}" />
+            </StackPanel>
+          </Border>
+
+          <ComboBox Grid.Column="1" MinWidth="170" VerticalAlignment="Stretch"
+                    ItemsSource="{Binding LevelFilters}"
+                    SelectedItem="{Binding SelectedLevelFilter}" />
+        </Grid>
+
+        <!-- ===== Pesan kosong ===== -->
+        <TextBlock Text="{Binding EmptyMessage}" Foreground="#718279" TextWrapping="Wrap"
+                   IsVisible="{Binding HasNoResults}" />
+
+        <!-- ===== Kartu batch (3 kolom) ===== -->
+        <ItemsControl ItemsSource="{Binding Batches}" Margin="-6,0">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="3" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="models:RoastingBatch">
+              <Border Background="White" CornerRadius="16" Padding="18" Margin="6">
+                <StackPanel Spacing="12">
+
+                  <!-- Kode + tanggal -->
+                  <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <PathIcon Data="{StaticResource IconFlame}" Width="14" Height="14" Foreground="#183B32" />
+                      <TextBlock Text="{Binding Code}" FontWeight="SemiBold" FontSize="13" Foreground="#183B32" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding DateDisplay}" Foreground="#718279" FontSize="11" />
+                  </Grid>
+
+                  <!-- Nama biji + badge level -->
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding MaterialName}" FontSize="18" FontWeight="Bold"
+                               Foreground="#183B32" TextWrapping="Wrap" VerticalAlignment="Center" />
+                    <Border Grid.Column="1" Background="#F3E6CC" CornerRadius="6" Padding="8,3"
+                            VerticalAlignment="Top">
+                      <TextBlock Text="{Binding LevelDisplay}" FontSize="11" Foreground="#8A6420" />
+                    </Border>
+                  </Grid>
+
+                  <!-- Status -->
+                  <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,-6,0,0">
+                    <Ellipse Width="6" Height="6" Fill="#2E9E6B" VerticalAlignment="Center" />
+                    <TextBlock Text="Selesai dipanggang" FontSize="11" Foreground="#718279" />
+                  </StackPanel>
+
+                  <!-- Konversi stok -->
+                  <Border Background="#F4F1EA" CornerRadius="10" Padding="14">
+                    <StackPanel Spacing="8">
+                      <TextBlock Text="KONVERSI STOK" FontSize="10" FontWeight="SemiBold" Foreground="#718279" />
+                      <Grid ColumnDefinitions="*,Auto,*">
+                        <StackPanel>
+                          <TextBlock Text="Green bean" FontSize="11" Foreground="#718279" />
+                          <TextBlock Text="{Binding UsedDisplay}" FontSize="16" FontWeight="Bold" Foreground="#183B32" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="→" Foreground="#718279" VerticalAlignment="Center" Margin="8,0" />
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                          <TextBlock Text="Roast bean" FontSize="11" Foreground="#718279" HorizontalAlignment="Right" />
+                          <TextBlock Text="{Binding RoastedDisplay}" FontSize="16" FontWeight="Bold"
+                                     Foreground="#1F7A5A" HorizontalAlignment="Right" />
+                        </StackPanel>
+                      </Grid>
+                    </StackPanel>
+                  </Border>
+
+                  <!-- Susut -->
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Susut roasting" FontSize="12" Foreground="#718279" />
+                    <TextBlock Grid.Column="1" Text="{Binding LossDisplay}" FontWeight="Bold" Foreground="#C0392B" />
+                  </Grid>
+
+                  <Border Height="1" Background="#E8E4DA" />
+
+                  <!-- Catatan rasa -->
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="CATATAN RASA" FontSize="10" FontWeight="SemiBold" Foreground="#718279" />
+                    <TextBlock Text="{Binding NotesDisplay}" FontSize="12" Foreground="#183B32"
+                               TextWrapping="Wrap" MinHeight="40" />
+                  </StackPanel>
+
+                  <!-- Tombol aksi (belum ada fungsi) -->
+                  <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Background="#E3F0E6" Foreground="#183B32">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource IconPencil}" Width="14" Height="14" />
+                        <TextBlock Text="Edit" FontSize="12" />
+                      </StackPanel>
+                    </Button>
+                    <Button Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Background="White" BorderBrush="#E1E5E2" BorderThickness="1" Foreground="#183B32">
+                      <TextBlock Text="Detail batch ↗" FontSize="12" />
+                    </Button>
+                  </Grid>
+
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ================= LAPISAN ATAS: OVERLAY FORM ================= -->
+    <!-- Harus ditulis SETELAH ScrollViewer supaya tampil di atasnya -->
+    <Grid IsVisible="{Binding IsFormOpen}" Background="#99000000">
+
+      <Border Width="640" MaxHeight="680" Background="White" CornerRadius="16"
+              HorizontalAlignment="Center" VerticalAlignment="Center"
+              BoxShadow="0 10 40 0 #40000000">
+
+        <Grid RowDefinitions="Auto,*,Auto">
+
+          <!-- Header form -->
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="24,20">
+            <TextBlock Text="Tambah Batch Roasting"
+                       FontSize="20" FontWeight="Bold" Foreground="#183B32" />
+            <Button Grid.Column="1" Content="✕" Background="Transparent"
+                    Command="{Binding CancelFormCommand}" />
+          </Grid>
+
+          <!-- Isi form -->
+          <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="24,8" Spacing="12">
+
+              <!-- Green Bean -->
+              <StackPanel Spacing="4">
+                <TextBlock Text="Green Bean" Foreground="#718279" />
+                <ComboBox HorizontalAlignment="Stretch"
+                          ItemsSource="{Binding GreenBeans}"
+                          SelectedItem="{Binding SelectedGreenBean}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:RawMaterial">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding StockDisplay, StringFormat='(stok: {0})'}" Foreground="#718279" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+
+              <!-- Dipakai & hasil -->
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Green Bean Dipakai (Kg)" Foreground="#718279" />
+                  <TextBox Text="{Binding GreenBeanUsedKg}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <TextBlock Text="Hasil Roast Bean (gram)" Foreground="#718279" />
+                  <TextBox Text="{Binding RoastedGram}" />
+                </StackPanel>
+              </Grid>
+
+              <!-- Level & tanggal -->
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="Roast Level" Foreground="#718279" />
+                  <ComboBox HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding RoastLevels}"
+                            SelectedItem="{Binding RoastLevel}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <TextBlock Text="Tanggal" Foreground="#718279" />
+                  <CalendarDatePicker HorizontalAlignment="Stretch"
+                                      SelectedDate="{Binding BatchDate}" />
+                </StackPanel>
+              </Grid>
+
+              <!-- Catatan -->
+              <StackPanel Spacing="4">
+                <TextBlock Text="Catatan" Foreground="#718279" />
+                <TextBox Text="{Binding Notes}"
+                         PlaceholderText="Profil rasa, durasi, suhu, dll."
+                         AcceptsReturn="True" TextWrapping="Wrap" Height="90" />
+              </StackPanel>
+
+              <!-- Kotak info hijau -->
+              <Border Background="#EAF4EC" CornerRadius="8" Padding="12">
+                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#183B32"
+                           Text="Catatan: Saat batch disimpan, stok green bean berkurang otomatis dan roast bean baru ditambahkan di Bahan Baku → Roast Bean." />
+              </Border>
+
+              <!-- Pesan error -->
+              <TextBlock Text="{Binding FormError}" Foreground="Red" TextWrapping="Wrap" />
+
+            </StackPanel>
+          </ScrollViewer>
+
+          <!-- Tombol bawah -->
+          <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="24,16">
+            <Button Content="Batal" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding CancelFormCommand}" />
+            <Button Grid.Column="1" Content="Simpan" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Background="#1F5C4A" Foreground="White"
+                    Command="{Binding SaveFormCommand}" />
+          </Grid>
+
+        </Grid>
+      </Border>
+    </Grid>
+
+  </Grid>
+</UserControl>
