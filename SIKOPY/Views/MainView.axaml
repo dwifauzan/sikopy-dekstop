@@ -45,9 +45,10 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid ColumnDefinitions="248,*">
+    <Grid ColumnDefinitions="Auto,*">
         <!-- ===== Sidebar ===== -->
-        <Border Grid.Column="0" Background="#183B32" Padding="20,30,20,0">
+        <Border Grid.Column="0" Width="248" Background="#183B32" Padding="20,30,20,0"
+                IsVisible="{Binding IsAuthenticated}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Top">
                     <StackPanel Orientation="Horizontal" Spacing="12">
@@ -109,12 +110,13 @@
                     <Border Height="1" Background="#416555" />
                     <StackPanel Orientation="Horizontal" Spacing="12" Height="68">
                         <Border Background="#E7D9BF" CornerRadius="19" Width="38" Height="38">
-                            <TextBlock Text="A" Foreground="#183B32" FontSize="15" FontWeight="Bold"
+                            <TextBlock Text="{Binding CurrentUserInitial}" Foreground="#183B32"
+                                       FontSize="15" FontWeight="Bold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel VerticalAlignment="Center" Spacing="2">
-                            <TextBlock Text="Admin Roastery" Foreground="White" FontSize="13" />
-                            <TextBlock Text="Admin" Foreground="#A9C5B2" FontSize="11" />
+                            <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontSize="13" />
+                            <TextBlock Text="{Binding CurrentUserRole}" Foreground="#A9C5B2" FontSize="11" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
