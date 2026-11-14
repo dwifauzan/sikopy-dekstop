@@ -6,6 +6,8 @@ namespace SIKOPY.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     public LoginViewModel Login { get; }
+    public RegisterViewModel Register { get; }
+    public ForgotPasswordViewModel ForgotPassword { get; }
     public RawMaterialsViewModel RawMaterials { get; } = new();
     public RoastingViewModel Roasting { get; } = new();
 
@@ -39,19 +41,42 @@ public partial class MainViewModel : ViewModelBase
 
     public MainViewModel()
     {
-        Login = new LoginViewModel(OnLoginSucceeded);
+        Login = new LoginViewModel(OnLoginSucceeded, ShowRegister, ShowForgotPassword);
+        Register = new RegisterViewModel(
+            username => ShowLogin(username, "Akun berhasil dibuat. Silakan masuk."),
+            () => ShowLogin());
+        ForgotPassword = new ForgotPasswordViewModel(
+            username => ShowLogin(username, "Password berhasil diperbarui. Silakan masuk."),
+            () => ShowLogin());
         _currentPage = Login;
     }
 
     public void ShowRawMaterials() => CurrentPage = RawMaterials;
     public void ShowRoasting() => CurrentPage = Roasting;
 
+    private void ShowLogin(string? prefillUsername = null, string? statusMessage = null)
+    {
+        Login.Reset(prefillUsername, statusMessage);
+        CurrentPage = Login;
+    }
+
+    private void ShowRegister()
+    {
+        Register.Reset();
+        CurrentPage = Register;
+    }
+
+    private void ShowForgotPassword()
+    {
+        ForgotPassword.Reset();
+        CurrentPage = ForgotPassword;
+    }
+
     [RelayCommand]
     private void Logout()
     {
         CurrentUser = null;
-        Login.Reset();
-        CurrentPage = Login;
+        ShowLogin();
     }
 
     private void OnLoginSucceeded(UserAccount user)

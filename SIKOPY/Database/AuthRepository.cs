@@ -46,6 +46,28 @@ public sealed class AuthRepository
         };
     }
 
+    public async Task<bool> UsernameExistsAsync(
+        string username,
+        CancellationToken cancellationToken = default)
+    {
+        var trimmedUsername = username.Trim();
+        if (trimmedUsername.Length == 0)
+            return false;
+
+        await using var connection = await PostgresConnectionFactory.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT 1
+            FROM pengguna
+            WHERE nama_pengguna = @username
+            LIMIT 1;
+            """,
+            connection);
+        command.Parameters.AddWithValue("username", trimmedUsername);
+
+        return await command.ExecuteScalarAsync(cancellationToken) is not null;
+    }
+
     public async Task<UserAccount> CreateUserAsync(
         string username,
         string password,
@@ -87,5 +109,31 @@ public sealed class AuthRepository
             FullName = reader.GetString(2),
             Role = reader.GetString(3)
         };
+    }
+
+    public async Task<bool> ResetPasswordAsync(
+        string username,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        var trimmedUsername = username.Trim();
+        ArgumentException.ThrowIfNullOrWhiteSpace(trimmedUsername);
+        ArgumentException.ThrowIfNullOrEmpty(newPassword);
+
+        var passwordHash = PasswordHasher.Hash(newPassword);
+
+        await using var connection = await PostgresConnectionFactory.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            UPDATE pengguna
+            SET kata_sandi = @passwordHash
+            WHERE nama_pengguna = @username;
+            """,
+            connection);
+        command.Parameters.AddWithValue("username", trimmedUsername);
+        command.Parameters.AddWithValue("passwordHash", passwordHash);
+
+        var affectedRows = await command.ExecuteNonQueryAsync(cancellationToken);
+        return affectedRows > 0;
     }
 }

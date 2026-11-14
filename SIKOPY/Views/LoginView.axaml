@@ -17,12 +17,15 @@
         <SolidColorBrush x:Key="LoginAccentBadgeBackground" Color="#E7D9BF" />
         <SolidColorBrush x:Key="LoginCardSurfaceBackground" Color="#FFFFFF" />
         <SolidColorBrush x:Key="LoginHeadingForeground" Color="#183B32" />
+        <SolidColorBrush x:Key="LoginPrimaryForeground" Color="#1F5A49" />
         <SolidColorBrush x:Key="LoginMutedForeground" Color="#718279" />
         <SolidColorBrush x:Key="LoginBorderBrush" Color="#DCE5DC" />
         <SolidColorBrush x:Key="LoginHoverSurfaceBrush" Color="#F3F6F2" />
         <SolidColorBrush x:Key="LoginPressedSurfaceBrush" Color="#E6EDE6" />
         <SolidColorBrush x:Key="LoginErrorSurfaceBrush" Color="#FDF2F2" />
         <SolidColorBrush x:Key="LoginErrorBorderBrush" Color="#F5D0CE" />
+        <SolidColorBrush x:Key="LoginSuccessSurfaceBrush" Color="#EEF6F0" />
+        <SolidColorBrush x:Key="LoginSuccessBorderBrush" Color="#BBD7C2" />
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -52,6 +55,39 @@
         </Style>
         <Style Selector="Button.eyeToggle:pointerover Path">
             <Setter Property="Stroke" Value="{StaticResource LoginHeadingForeground}" />
+        </Style>
+
+        <Style Selector="Button.textLink">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="2,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource LoginMutedForeground}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.textLink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.textLink:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource LoginHeadingForeground}" />
+        </Style>
+
+        <Style Selector="Button.accentLink">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="2,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource LoginPrimaryForeground}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.accentLink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.accentLink:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource LoginHeadingForeground}" />
         </Style>
     </UserControl.Styles>
 
@@ -110,10 +146,24 @@
                                    FontSize="24"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource LoginHeadingForeground}" />
-                        <TextBlock Margin="0,4,0,24"
+                        <TextBlock Margin="0,4,0,22"
                                    Text="Lanjutkan ke ruang kerja Anda"
                                    FontSize="13"
                                    Foreground="{StaticResource LoginMutedForeground}" />
+
+                        <!-- Pesan Status Sukses -->
+                        <Border Margin="0,0,0,16"
+                                Padding="12,9"
+                                CornerRadius="8"
+                                Background="{StaticResource LoginSuccessSurfaceBrush}"
+                                BorderBrush="{StaticResource LoginSuccessBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding HasStatus}">
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       FontSize="12"
+                                       Foreground="{StaticResource LoginPrimaryForeground}"
+                                       TextWrapping="Wrap" />
+                        </Border>
 
                         <!-- Input Username -->
                         <TextBlock Classes="fieldLabel" Text="Username" />
@@ -154,8 +204,16 @@
                             </TextBox.InnerRightContent>
                         </TextBox>
 
+                        <!-- Tautan Lupa Password -->
+                        <Button Classes="textLink"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                Content="Lupa password?"
+                                Command="{Binding NavigateToForgotPasswordCommand}"
+                                IsEnabled="{Binding !IsLoading}" />
+
                         <!-- Pesan Error -->
-                        <Border Margin="0,14,0,0"
+                        <Border Margin="0,12,0,0"
                                 Padding="12,9"
                                 CornerRadius="8"
                                 Background="{StaticResource LoginErrorSurfaceBrush}"
@@ -167,7 +225,7 @@
 
                         <!-- Tombol Submit -->
                         <Button Classes="primary"
-                                Margin="0,24,0,0"
+                                Margin="0,18,0,0"
                                 Height="44"
                                 CornerRadius="8"
                                 HorizontalAlignment="Stretch"
@@ -180,6 +238,23 @@
                                 <TextBlock Text="Memproses..." IsVisible="{Binding IsLoading}" />
                             </Panel>
                         </Button>
+
+                        <!-- Navigasi ke Registrasi -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="4"
+                                    Margin="0,16,0,0">
+                            <TextBlock Text="Belum punya akun?"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource LoginMutedForeground}" />
+                            <Button Classes="accentLink"
+                                    Content="Daftar"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding NavigateToRegisterCommand}"
+                                    IsEnabled="{Binding !IsLoading}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </Grid>
