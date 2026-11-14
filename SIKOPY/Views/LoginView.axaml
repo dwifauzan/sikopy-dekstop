@@ -120,7 +120,7 @@
                         <TextBox Classes="field"
                                  Height="42"
                                  Margin="0,0,0,16"
-                                 Watermark="Nama pengguna"
+                                 PlaceholderText="Nama pengguna"
                                  MaxLength="50"
                                  Text="{Binding Username, Mode=TwoWay}"
                                  IsEnabled="{Binding !IsLoading}" />
@@ -129,7 +129,7 @@
                         <TextBlock Classes="fieldLabel" Text="Password" />
                         <TextBox Classes="field"
                                  Height="42"
-                                 Watermark="Masukkan password"
+                                 PlaceholderText="Masukkan password"
                                  PasswordChar="{Binding PasswordChar}"
                                  Text="{Binding Password, Mode=TwoWay}"
                                  IsEnabled="{Binding !IsLoading}">
