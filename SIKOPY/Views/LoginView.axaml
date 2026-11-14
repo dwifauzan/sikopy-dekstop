@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             x:Class="SIKOPY.Views.LoginView"
+             x:DataType="vm:LoginViewModel"
+             Background="#F4F1EB">
+
+             <Style Selector="">
+             
+             </Style>
+  
+</UserControl>
