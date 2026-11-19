@@ -1,0 +1,263 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="640"
+             x:Class="SIKOPY.Views.LoginView"
+             x:DataType="vm:LoginViewModel"
+             Background="{StaticResource LoginWindowBackground}">
+    <Design.DataContext>
+        <vm:LoginViewModel />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="LoginWindowBackground" Color="#F4F1EB" />
+        <SolidColorBrush x:Key="LoginBrandPanelBackground" Color="#183B32" />
+        <SolidColorBrush x:Key="LoginAccentBadgeBackground" Color="#E7D9BF" />
+        <SolidColorBrush x:Key="LoginCardSurfaceBackground" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="LoginHeadingForeground" Color="#183B32" />
+        <SolidColorBrush x:Key="LoginPrimaryForeground" Color="#1F5A49" />
+        <SolidColorBrush x:Key="LoginMutedForeground" Color="#718279" />
+        <SolidColorBrush x:Key="LoginBorderBrush" Color="#DCE5DC" />
+        <SolidColorBrush x:Key="LoginHoverSurfaceBrush" Color="#F3F6F2" />
+        <SolidColorBrush x:Key="LoginPressedSurfaceBrush" Color="#E6EDE6" />
+        <SolidColorBrush x:Key="LoginErrorSurfaceBrush" Color="#FDF2F2" />
+        <SolidColorBrush x:Key="LoginErrorBorderBrush" Color="#F5D0CE" />
+        <SolidColorBrush x:Key="LoginSuccessSurfaceBrush" Color="#EEF6F0" />
+        <SolidColorBrush x:Key="LoginSuccessBorderBrush" Color="#BBD7C2" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.eyeToggle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.eyeToggle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource LoginHoverSurfaceBrush}" />
+        </Style>
+        <Style Selector="Button.eyeToggle:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource LoginPressedSurfaceBrush}" />
+        </Style>
+        <Style Selector="Button.eyeToggle Path">
+            <Setter Property="Stroke" Value="{StaticResource LoginMutedForeground}" />
+            <Setter Property="StrokeThickness" Value="1.75" />
+            <Setter Property="StrokeLineCap" Value="Round" />
+            <Setter Property="StrokeJoin" Value="Round" />
+        </Style>
+        <Style Selector="Button.eyeToggle:pointerover Path">
+            <Setter Property="Stroke" Value="{StaticResource LoginHeadingForeground}" />
+        </Style>
+
+        <Style Selector="Button.textLink">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="2,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource LoginMutedForeground}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.textLink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.textLink:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource LoginHeadingForeground}" />
+        </Style>
+
+        <Style Selector="Button.accentLink">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="2,2" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource LoginPrimaryForeground}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.accentLink:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.accentLink:pointerover">
+            <Setter Property="Foreground" Value="{StaticResource LoginHeadingForeground}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+        <Border Width="760"
+                MinHeight="440"
+                CornerRadius="16"
+                ClipToBounds="True"
+                BorderBrush="{StaticResource LoginBorderBrush}"
+                BorderThickness="1"
+                BoxShadow="0 14 36 0 #1A183B32">
+            <Grid ColumnDefinitions="270,*">
+                <!-- ===== Panel Kiri (Area Branding) ===== -->
+                <Border Grid.Column="0"
+                        Background="{StaticResource LoginBrandPanelBackground}"
+                        Padding="32">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <!-- Logo & Nama Brand -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Border Background="{StaticResource LoginAccentBadgeBackground}"
+                                    CornerRadius="8"
+                                    Width="36"
+                                    Height="36">
+                                <PathIcon Data="{StaticResource IconCoffee}"
+                                          Width="19"
+                                          Height="19"
+                                          Foreground="{StaticResource LoginBrandPanelBackground}" />
+                            </Border>
+                            <TextBlock Text="SIKOPI"
+                                       Foreground="White"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       LetterSpacing="1.4"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Tagline -->
+                        <TextBlock Grid.Row="1"
+                                   Text="Ruang kerja&#10;roastery."
+                                   FontFamily="Georgia, Times New Roman, Serif"
+                                   FontSize="26"
+                                   LineHeight="34"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Left" />
+                    </Grid>
+                </Border>
+
+                <!-- ===== Panel Kanan (Area Form Login) ===== -->
+                <Border Grid.Column="1"
+                        Background="{StaticResource LoginCardSurfaceBackground}"
+                        Padding="44,36">
+                    <StackPanel VerticalAlignment="Center">
+                        <!-- Header Form -->
+                        <TextBlock Text="Masuk"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource LoginHeadingForeground}" />
+                        <TextBlock Margin="0,4,0,22"
+                                   Text="Lanjutkan ke ruang kerja Anda"
+                                   FontSize="13"
+                                   Foreground="{StaticResource LoginMutedForeground}" />
+
+                        <!-- Pesan Status Sukses -->
+                        <Border Margin="0,0,0,16"
+                                Padding="12,9"
+                                CornerRadius="8"
+                                Background="{StaticResource LoginSuccessSurfaceBrush}"
+                                BorderBrush="{StaticResource LoginSuccessBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding HasStatus}">
+                            <TextBlock Text="{Binding StatusMessage}"
+                                       FontSize="12"
+                                       Foreground="{StaticResource LoginPrimaryForeground}"
+                                       TextWrapping="Wrap" />
+                        </Border>
+
+                        <!-- Input Username -->
+                        <TextBlock Classes="fieldLabel" Text="Username" />
+                        <TextBox Classes="field"
+                                 Height="42"
+                                 Margin="0,0,0,16"
+                                 PlaceholderText="Nama pengguna"
+                                 MaxLength="50"
+                                 Text="{Binding Username, Mode=TwoWay}"
+                                 IsEnabled="{Binding !IsLoading}" />
+
+                        <!-- Input Password -->
+                        <TextBlock Classes="fieldLabel" Text="Password" />
+                        <TextBox Classes="field"
+                                 Height="42"
+                                 PlaceholderText="Masukkan password"
+                                 PasswordChar="{Binding PasswordChar}"
+                                 Text="{Binding Password, Mode=TwoWay}"
+                                 IsEnabled="{Binding !IsLoading}">
+                            <TextBox.InnerRightContent>
+                                <Button Classes="eyeToggle"
+                                        Command="{Binding TogglePasswordVisibilityCommand}"
+                                        Focusable="False"
+                                        ToolTip.Tip="Tampilkan / sembunyikan password">
+                                    <Panel>
+                                        <Viewbox Width="16" Height="16" IsVisible="{Binding !IsPasswordVisible}">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0 M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+                                            </Canvas>
+                                        </Viewbox>
+                                        <Viewbox Width="16" Height="16" IsVisible="{Binding IsPasswordVisible}">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Data="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49 M14.084 14.158a3 3 0 0 1-4.242-4.242 M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143 M2 2l20 20" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Panel>
+                                </Button>
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+
+                        <!-- Tautan Lupa Password -->
+                        <Button Classes="textLink"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Right"
+                                Content="Lupa password?"
+                                Command="{Binding NavigateToForgotPasswordCommand}"
+                                IsEnabled="{Binding !IsLoading}" />
+
+                        <!-- Pesan Error -->
+                        <Border Margin="0,12,0,0"
+                                Padding="12,9"
+                                CornerRadius="8"
+                                Background="{StaticResource LoginErrorSurfaceBrush}"
+                                BorderBrush="{StaticResource LoginErrorBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding HasError}">
+                            <TextBlock Classes="formError" Text="{Binding ErrorMessage}" />
+                        </Border>
+
+                        <!-- Tombol Submit -->
+                        <Button Classes="primary"
+                                Margin="0,18,0,0"
+                                Height="44"
+                                CornerRadius="8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                FontWeight="SemiBold"
+                                IsDefault="True"
+                                Command="{Binding LoginCommand}">
+                            <Panel>
+                                <TextBlock Text="Masuk" IsVisible="{Binding !IsLoading}" />
+                                <TextBlock Text="Memproses..." IsVisible="{Binding IsLoading}" />
+                            </Panel>
+                        </Button>
+
+                        <!-- Navigasi ke Registrasi -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Spacing="4"
+                                    Margin="0,16,0,0">
+                            <TextBlock Text="Belum punya akun?"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource LoginMutedForeground}" />
+                            <Button Classes="accentLink"
+                                    Content="Daftar"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding NavigateToRegisterCommand}"
+                                    IsEnabled="{Binding !IsLoading}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
