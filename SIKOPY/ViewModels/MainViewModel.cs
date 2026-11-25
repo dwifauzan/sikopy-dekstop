@@ -1,15 +1,22 @@
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using SIKOPY.Database;
 using SIKOPY.Models;
 
 namespace SIKOPY.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private readonly RoastingRepository _roastingRepository = new();
+    private bool _isLoadingShop;
     public LoginViewModel Login { get; }
     public RegisterViewModel Register { get; }
     public ForgotPasswordViewModel ForgotPassword { get; }
     public RawMaterialsViewModel RawMaterials { get; } = new();
     public RoastingViewModel Roasting { get; } = new();
+    public ShopWindowViewModel Shop { get; } = new();
 
     private UserAccount? _currentUser;
     public UserAccount? CurrentUser
@@ -79,9 +86,39 @@ public partial class MainViewModel : ViewModelBase
         ShowLogin();
     }
 
+    private async Task LoadShopProductsAsync()
+    {
+        if (_isLoadingShop)
+            return;
+
+        _isLoadingShop = true;
+        try
+        {
+            var batches = await _roastingRepository.GetBatchesAsync(500);
+            Shop.LoadProducts(batches);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Gagal memuat produk etalase: {ex.Message}");
+        }
+        finally
+        {
+            _isLoadingShop = false;
+        }
+    }
+    
     private void OnLoginSucceeded(UserAccount user)
     {
         CurrentUser = user;
         CurrentPage = RawMaterials;
+        _ = LoadShopProductsAsync();
     }
+    
+    public void ShowShop()
+    {
+        CurrentPage = Shop;
+        _ = LoadShopProductsAsync();
+    }
+
+    
 }

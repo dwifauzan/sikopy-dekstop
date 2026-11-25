@@ -23,10 +23,17 @@ public partial class MainView : UserControl
         SetActive(NavRoasting);
     }
 
+    private void NavShop_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.ShowShop();
+        SetActive(NavShop);
+    }
+
     // Memindahkan highlight "active" ke menu yang diklik
     private void SetActive(Border active)
     {
         NavRawMaterials.Classes.Set("active", NavRawMaterials == active);
         NavRoasting.Classes.Set("active", NavRoasting == active);
+        NavShop.Classes.Set("active", NavShop == active);
     }
 }

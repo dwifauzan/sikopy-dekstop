@@ -85,7 +85,7 @@
                             <TextBlock Text="Batch Roasting" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir">
+                    <Border x:Name="NavShop" Classes="navItem" Tapped="NavShop_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconStore}" />
                             <TextBlock Text="Etalase" />
