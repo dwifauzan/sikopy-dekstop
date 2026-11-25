@@ -6,9 +6,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using SIKOPY.Models;
 
 namespace SIKOPY.ViewModels;
@@ -16,12 +16,41 @@ namespace SIKOPY.ViewModels;
 /// <summary>Snapshot sederhana untuk menyimpan state keranjang secara persisten.</summary>
 public sealed record CartItemSnapshot(int ProductId, string Code, decimal SavedGram);
 
+/// <summary>Wrapper command agar command level item tetap bekerja dengan atau tanpa CommandParameter dari AXAML.</summary>
+internal sealed class BoundItemCommand<T> : ICommand
+{
+    private readonly ICommand _inner;
+    private readonly T _fallbackItem;
+
+    public BoundItemCommand(ICommand inner, T fallbackItem)
+    {
+        _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+        _fallbackItem = fallbackItem;
+    }
+
+    public event EventHandler? CanExecuteChanged
+    {
+        add => _inner.CanExecuteChanged += value;
+        remove => _inner.CanExecuteChanged -= value;
+    }
+
+    public bool CanExecute(object? parameter)
+        => _inner.CanExecute(ResolveParameter(parameter));
+
+    public void Execute(object? parameter)
+        => _inner.Execute(ResolveParameter(parameter));
+
+    private object? ResolveParameter(object? parameter)
+        => parameter is T ? parameter : _fallbackItem;
+}
+
 /// <summary>Representasi produk etalase yang memetakan data RoastingBatch beserta origin dan harga per gram.</summary>
-public sealed class ShopProductItem : INotifyPropertyChanged
+public sealed class ShopProductItem : ObservableObject
 {
     private static readonly CultureInfo Indonesian = CultureInfo.GetCultureInfo("id-ID");
 
     private decimal _inCartGram;
+    private ICommand? _buyCommand;
 
     public ShopProductItem(
         RoastingBatch batch,
@@ -35,8 +64,6 @@ public sealed class ShopProductItem : INotifyPropertyChanged
         BuyCommand = buyCommand;
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
     public RoastingBatch Batch { get; }
     public int Id => Batch.Id;
     public string Code => Batch.Code;
@@ -48,7 +75,25 @@ public sealed class ShopProductItem : INotifyPropertyChanged
 
     public string Origin { get; }
     public decimal PricePerGram { get; }
-    public ICommand? BuyCommand { get; internal set; }
+
+    public ICommand? BuyCommand
+    {
+        get => _buyCommand;
+        internal set
+        {
+            var wrapped = value is null or BoundItemCommand<ShopProductItem>
+                ? value
+                : new BoundItemCommand<ShopProductItem>(value, this);
+
+            if (ReferenceEquals(_buyCommand, wrapped))
+            {
+                return;
+            }
+
+            _buyCommand = wrapped;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>Stok gram tersedia (0 g apabila RoastedGram bernilai null atau <= 0).</summary>
     public decimal AvailableStockGram => Math.Max(0m, RoastedGram ?? 0m);
@@ -89,13 +134,10 @@ public sealed class ShopProductItem : INotifyPropertyChanged
     {
         InCartGram = inCartGram;
     }
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
 
 /// <summary>Item keranjang yang menyimpan referensi produk, batas stok RoastedGram, dan takaran gram tersimpan.</summary>
-public sealed class CartItemViewModel : INotifyPropertyChanged
+public sealed class CartItemViewModel : ObservableObject
 {
     private static readonly CultureInfo Indonesian = CultureInfo.GetCultureInfo("id-ID");
 
@@ -114,21 +156,19 @@ public sealed class CartItemViewModel : INotifyPropertyChanged
         MaxStockGram = product.AvailableStockGram;
         _savedGram = Math.Clamp(initialSavedGram, 0m, MaxStockGram);
 
-        IncreaseCommand = increaseCommand;
-        DecreaseCommand = decreaseCommand;
-        RemoveCommand = removeCommand;
+        IncreaseCommand = WrapCommand(increaseCommand);
+        DecreaseCommand = WrapCommand(decreaseCommand);
+        RemoveCommand = WrapCommand(removeCommand);
     }
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    public ShopProductItem Product { get; }
+    public ShopProductItem Product { get; private set; }
     public int ProductId => Product.Id;
     public string Code => Product.Code;
     public string MaterialName => Product.MaterialName;
     public string LevelDisplay => Product.LevelDisplay;
     public string Origin => Product.Origin;
     public decimal PricePerGram => Product.PricePerGram;
-    public decimal MaxStockGram { get; }
+    public decimal MaxStockGram { get; private set; }
     public decimal GramStep { get; }
 
     public ICommand? IncreaseCommand { get; }
@@ -166,12 +206,48 @@ public sealed class CartItemViewModel : INotifyPropertyChanged
     public decimal SubtotalPrice => SavedGram * PricePerGram;
     public string SubtotalPriceDisplay => $"Rp {SubtotalPrice.ToString("N0", Indonesian)}";
 
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    internal void UpdateProduct(ShopProductItem latestProduct)
+    {
+        ArgumentNullException.ThrowIfNull(latestProduct);
+
+        Product = latestProduct;
+        MaxStockGram = latestProduct.AvailableStockGram;
+
+        var clamped = Math.Clamp(_savedGram, 0m, MaxStockGram);
+        var savedGramChanged = _savedGram != clamped;
+        _savedGram = clamped;
+
+        OnPropertyChanged(nameof(Product));
+        OnPropertyChanged(nameof(ProductId));
+        OnPropertyChanged(nameof(Code));
+        OnPropertyChanged(nameof(MaterialName));
+        OnPropertyChanged(nameof(LevelDisplay));
+        OnPropertyChanged(nameof(Origin));
+        OnPropertyChanged(nameof(PricePerGram));
+        OnPropertyChanged(nameof(MaxStockGram));
+        OnPropertyChanged(nameof(MaxStockDisplay));
+
+        if (savedGramChanged)
+        {
+            OnPropertyChanged(nameof(SavedGram));
+            OnPropertyChanged(nameof(SavedGramDisplay));
+        }
+
+        OnPropertyChanged(nameof(SubtotalPrice));
+        OnPropertyChanged(nameof(SubtotalPriceDisplay));
+        OnPropertyChanged(nameof(CanIncrease));
+        OnPropertyChanged(nameof(CanDecrease));
+        OnPropertyChanged(nameof(IsAtMaxStock));
+    }
+
+    private ICommand? WrapCommand(ICommand? command)
+        => command is null or BoundItemCommand<CartItemViewModel>
+            ? command
+            : new BoundItemCommand<CartItemViewModel>(command, this);
 }
 
 /// <summary>ViewModel halaman Etalase Toko dan Modal Keranjang (single source of truth).</summary>
-public class ShopWindowViewModel : INotifyPropertyChanged
+public class ShopWindowViewModel : ViewModelBase
 {
     public const decimal DefaultBuyGramStep = 100m;
     public const decimal DefaultCartGramStep = 50m;
@@ -190,6 +266,7 @@ public class ShopWindowViewModel : INotifyPropertyChanged
 
     private readonly Action<IReadOnlyList<CartItemSnapshot>>? _persistCartAction;
     private readonly Func<IReadOnlyList<CartItemSnapshot>>? _loadPersistedCartFunc;
+    private readonly HashSet<CartItemViewModel> _subscribedCartItems = [];
     private readonly RelayCommand _openCartCommand;
     private readonly RelayCommand _closeCartCommand;
     private readonly RelayCommand<ShopProductItem> _buyCommand;
@@ -253,8 +330,6 @@ public class ShopWindowViewModel : INotifyPropertyChanged
             LoadProducts(products);
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     // -------------------------------------------------------------------------
     // Core State (Mutable Properties)
@@ -395,7 +470,15 @@ public class ShopWindowViewModel : INotifyPropertyChanged
         }
         AllProducts.CollectionChanged += OnAllProductsCollectionChanged;
 
-        RestoreCartFromSnapshotIfNeeded();
+        if (CartItems.Count > 0)
+        {
+            ReconcileCartWithProducts();
+        }
+        else
+        {
+            RestoreCartFromSnapshotIfNeeded();
+        }
+
         RefreshFilteredProducts();
         NotifyCartStateChanged();
     }
@@ -530,10 +613,14 @@ public class ShopWindowViewModel : INotifyPropertyChanged
             .Select(item => new CartItemSnapshot(item.ProductId, item.Code, item.SavedGram))
             .ToList();
 
+        if (!PersistSnapshot(snapshot))
+        {
+            StatusMessage = "Gagal menyimpan keranjang. Periksa akses penyimpanan lalu coba lagi.";
+            return;
+        }
+
         _savedCartSnapshot = snapshot;
         OnPropertyChanged(nameof(SavedCartSnapshot));
-
-        PersistSnapshot(snapshot);
         NotifyCartStateChanged();
 
         StatusMessage = CartItems.Count > 0
@@ -578,6 +665,14 @@ public class ShopWindowViewModel : INotifyPropertyChanged
              string.Equals(item.Code, product.Code, StringComparison.OrdinalIgnoreCase)));
     }
 
+    private ShopProductItem? FindMatchingProduct(int productId, string? code)
+    {
+        return AllProducts.FirstOrDefault(p =>
+            (productId > 0 && p.Id == productId) ||
+            (!string.IsNullOrWhiteSpace(code) &&
+             string.Equals(p.Code, code, StringComparison.OrdinalIgnoreCase)));
+    }
+
     private void OnAllProductsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.NewItems is not null)
@@ -594,19 +689,45 @@ public class ShopWindowViewModel : INotifyPropertyChanged
 
     private void OnCartItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (e.OldItems is not null)
+        if (e.Action == NotifyCollectionChangedAction.Reset)
         {
-            foreach (CartItemViewModel item in e.OldItems)
+            foreach (var tracked in _subscribedCartItems)
             {
-                item.PropertyChanged -= OnCartItemPropertyChanged;
+                tracked.PropertyChanged -= OnCartItemPropertyChanged;
+            }
+
+            _subscribedCartItems.Clear();
+
+            foreach (var item in CartItems)
+            {
+                if (_subscribedCartItems.Add(item))
+                {
+                    item.PropertyChanged += OnCartItemPropertyChanged;
+                }
             }
         }
-
-        if (e.NewItems is not null)
+        else
         {
-            foreach (CartItemViewModel item in e.NewItems)
+            if (e.OldItems is not null)
             {
-                item.PropertyChanged += OnCartItemPropertyChanged;
+                foreach (CartItemViewModel item in e.OldItems)
+                {
+                    if (_subscribedCartItems.Remove(item))
+                    {
+                        item.PropertyChanged -= OnCartItemPropertyChanged;
+                    }
+                }
+            }
+
+            if (e.NewItems is not null)
+            {
+                foreach (CartItemViewModel item in e.NewItems)
+                {
+                    if (_subscribedCartItems.Add(item))
+                    {
+                        item.PropertyChanged += OnCartItemPropertyChanged;
+                    }
+                }
             }
         }
 
@@ -637,7 +758,6 @@ public class ShopWindowViewModel : INotifyPropertyChanged
             FilteredProducts.Add(item);
         }
 
-        OnPropertyChanged(nameof(FilteredProducts));
         OnPropertyChanged(nameof(FilteredProductCount));
         OnPropertyChanged(nameof(FilteredProductCountText));
         OnPropertyChanged(nameof(CatalogSubheaderText));
@@ -714,6 +834,28 @@ public class ShopWindowViewModel : INotifyPropertyChanged
         _saveCartCommand.RaiseCanExecuteChanged();
     }
 
+    private void ReconcileCartWithProducts()
+    {
+        for (var i = CartItems.Count - 1; i >= 0; i--)
+        {
+            var cartItem = CartItems[i];
+            var matchedProduct = FindMatchingProduct(cartItem.ProductId, cartItem.Code);
+
+            if (matchedProduct is null || matchedProduct.AvailableStockGram <= 0m)
+            {
+                CartItems.RemoveAt(i);
+                continue;
+            }
+
+            cartItem.UpdateProduct(matchedProduct);
+
+            if (cartItem.SavedGram <= 0m)
+            {
+                CartItems.RemoveAt(i);
+            }
+        }
+    }
+
     private void RestoreCartFromSnapshotIfNeeded()
     {
         if (CartItems.Count > 0 || _savedCartSnapshot.Count == 0 || AllProducts.Count == 0)
@@ -728,11 +870,7 @@ public class ShopWindowViewModel : INotifyPropertyChanged
                 continue;
             }
 
-            var product = AllProducts.FirstOrDefault(p =>
-                (entry.ProductId > 0 && p.Id == entry.ProductId) ||
-                (!string.IsNullOrWhiteSpace(entry.Code) &&
-                 string.Equals(p.Code, entry.Code, StringComparison.OrdinalIgnoreCase)));
-
+            var product = FindMatchingProduct(entry.ProductId, entry.Code);
             if (product is null || product.AvailableStockGram <= 0m)
             {
                 continue;
@@ -746,12 +884,19 @@ public class ShopWindowViewModel : INotifyPropertyChanged
         }
     }
 
-    private void PersistSnapshot(IReadOnlyList<CartItemSnapshot> snapshot)
+    private bool PersistSnapshot(IReadOnlyList<CartItemSnapshot> snapshot)
     {
         if (_persistCartAction is not null)
         {
-            _persistCartAction(snapshot);
-            return;
+            try
+            {
+                _persistCartAction(snapshot);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         try
@@ -765,10 +910,11 @@ public class ShopWindowViewModel : INotifyPropertyChanged
 
             var json = JsonSerializer.Serialize(snapshot);
             File.WriteAllText(path, json);
+            return true;
         }
         catch
         {
-            // Fallback aman jika penyimpanan file tidak tersedia (misal lingkungan sandbox/browser).
+            return false;
         }
     }
 
@@ -802,9 +948,6 @@ public class ShopWindowViewModel : INotifyPropertyChanged
         var baseDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(baseDir, "SIKOPY", "shop_cart.json");
     }
-
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     private sealed class RelayCommand : ICommand
     {
