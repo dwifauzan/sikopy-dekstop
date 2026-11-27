@@ -34,7 +34,6 @@ public partial class RawMaterialsViewModel : ViewModelBase
     {
         SelectedTypeFilter = AllTypes;
         SelectedProcessFilter = AllProcesses;
-        _ = LoadAsync();
     }
 
     public ObservableCollection<RawMaterialRowViewModel> PageRows { get; } = new();

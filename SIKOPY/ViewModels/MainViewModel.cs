@@ -10,6 +10,7 @@ public partial class MainViewModel : ViewModelBase
     public ForgotPasswordViewModel ForgotPassword { get; }
     public RawMaterialsViewModel RawMaterials { get; } = new();
     public RoastingViewModel Roasting { get; } = new();
+    public CustomerHomeViewModel CustomerHome { get; } = new();
 
     private UserAccount? _currentUser;
     public UserAccount? CurrentUser
@@ -19,7 +20,9 @@ public partial class MainViewModel : ViewModelBase
         {
             if (SetProperty(ref _currentUser, value))
             {
+                Roasting.CurrentUserId = value?.Id;
                 OnPropertyChanged(nameof(IsAuthenticated));
+                OnPropertyChanged(nameof(IsStaff));
                 OnPropertyChanged(nameof(CurrentUserName));
                 OnPropertyChanged(nameof(CurrentUserRole));
                 OnPropertyChanged(nameof(CurrentUserInitial));
@@ -28,6 +31,7 @@ public partial class MainViewModel : ViewModelBase
     }
 
     public bool IsAuthenticated => CurrentUser is not null;
+    public bool IsStaff => CurrentUser is { IsCustomer: false };
     public string CurrentUserName => CurrentUser?.FullName ?? "Admin Roastery";
     public string CurrentUserRole => CurrentUser?.Role ?? "Admin";
     public string CurrentUserInitial => CurrentUser?.Initial ?? "A";
@@ -36,8 +40,18 @@ public partial class MainViewModel : ViewModelBase
     public ViewModelBase CurrentPage
     {
         get => _currentPage;
-        set => SetProperty(ref _currentPage, value);
+        set
+        {
+            if (SetProperty(ref _currentPage, value))
+            {
+                OnPropertyChanged(nameof(IsRawMaterialsPage));
+                OnPropertyChanged(nameof(IsRoastingPage));
+            }
+        }
     }
+
+    public bool IsRawMaterialsPage => CurrentPage == RawMaterials;
+    public bool IsRoastingPage => CurrentPage == Roasting;
 
     public MainViewModel()
     {
@@ -45,14 +59,24 @@ public partial class MainViewModel : ViewModelBase
         Register = new RegisterViewModel(
             username => ShowLogin(username, "Akun berhasil dibuat. Silakan masuk."),
             () => ShowLogin());
-        ForgotPassword = new ForgotPasswordViewModel(
-            username => ShowLogin(username, "Password berhasil diperbarui. Silakan masuk."),
-            () => ShowLogin());
+        ForgotPassword = new ForgotPasswordViewModel(() => ShowLogin());
         _currentPage = Login;
     }
 
-    public void ShowRawMaterials() => CurrentPage = RawMaterials;
-    public void ShowRoasting() => CurrentPage = Roasting;
+    // Reload on every visit so stock changed on another screen is never stale.
+    public void ShowRawMaterials()
+    {
+        if (!IsStaff) return;
+        CurrentPage = RawMaterials;
+        _ = RawMaterials.LoadCommand.ExecuteAsync(null);
+    }
+
+    public void ShowRoasting()
+    {
+        if (!IsStaff) return;
+        CurrentPage = Roasting;
+        _ = Roasting.LoadCommand.ExecuteAsync(null);
+    }
 
     private void ShowLogin(string? prefillUsername = null, string? statusMessage = null)
     {
@@ -66,11 +90,7 @@ public partial class MainViewModel : ViewModelBase
         CurrentPage = Register;
     }
 
-    private void ShowForgotPassword()
-    {
-        ForgotPassword.Reset();
-        CurrentPage = ForgotPassword;
-    }
+    private void ShowForgotPassword() => CurrentPage = ForgotPassword;
 
     [RelayCommand]
     private void Logout()
@@ -82,6 +102,14 @@ public partial class MainViewModel : ViewModelBase
     private void OnLoginSucceeded(UserAccount user)
     {
         CurrentUser = user;
-        CurrentPage = RawMaterials;
+        if (IsStaff)
+        {
+            ShowRawMaterials();
+        }
+        else
+        {
+            CustomerHome.Greeting = $"Halo, {user.FullName}!";
+            CurrentPage = CustomerHome;
+        }
     }
 }

@@ -18,13 +18,6 @@
           </StackPanel>
 
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="9">
-            <Button Classes="primary" VerticalAlignment="Center">
-              <StackPanel Orientation="Horizontal" Spacing="9">
-                <PathIcon Data="{StaticResource IconPencil}" Width="20" Height="20" />
-                <TextBlock Text="Edit Harga Roast Bean" VerticalAlignment="Center" />
-              </StackPanel>
-            </Button>
-
             <Button Classes="primary" VerticalAlignment="Center"
                     Command="{Binding OpenFormCommand}">
               <StackPanel Orientation="Horizontal" Spacing="9">
@@ -176,10 +169,12 @@
                                TextWrapping="Wrap" MinHeight="40" />
                   </StackPanel>
 
-                  <!-- Tombol aksi (belum ada fungsi) -->
+                  <!-- Tombol aksi -->
                   <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Background="#E3F0E6" Foreground="#183B32">
+                            Background="#E3F0E6" Foreground="#183B32"
+                            Command="{Binding $parent[ItemsControl].((vm:RoastingViewModel)DataContext).EditBatchCommand}"
+                            CommandParameter="{Binding}">
                       <StackPanel Orientation="Horizontal" Spacing="6">
                         <PathIcon Data="{StaticResource IconPencil}" Width="14" Height="14" />
                         <TextBlock Text="Edit" FontSize="12" />
@@ -212,7 +207,7 @@
 
           <!-- Header form -->
           <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="24,20">
-            <TextBlock Text="Tambah Batch Roasting"
+            <TextBlock Text="{Binding FormTitle}"
                        FontSize="20" FontWeight="Bold" Foreground="#183B32" />
             <Button Grid.Column="1" Content="✕" Background="Transparent"
                     Command="{Binding CancelFormCommand}" />
@@ -226,6 +221,7 @@
               <StackPanel Spacing="4">
                 <TextBlock Text="Green Bean" Foreground="#718279" />
                 <ComboBox HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding !IsEditing}"
                           ItemsSource="{Binding GreenBeans}"
                           SelectedItem="{Binding SelectedGreenBean}">
                   <ComboBox.ItemTemplate>
@@ -277,7 +273,7 @@
               <!-- Kotak info hijau -->
               <Border Background="#EAF4EC" CornerRadius="8" Padding="12">
                 <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#183B32"
-                           Text="Catatan: Saat batch disimpan, stok green bean berkurang otomatis dan roast bean baru ditambahkan di Bahan Baku → Roast Bean." />
+                           Text="{Binding FormInfo}" />
               </Border>
 
               <!-- Pesan error -->

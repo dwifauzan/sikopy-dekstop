@@ -20,14 +20,13 @@ public partial class RoastingViewModel : ViewModelBase
     private readonly RawMaterialRepository _rawMaterials = new();
     private readonly RoastingRepository _roasting = new();
     private readonly List<RoastingBatch> _allBatches = new();
+    private RoastingBatch? _editingBatch;
     private bool _isSaving;
 
-    public RoastingViewModel()
-    {
-        _ = LoadAsync();
-    }
-
     public string Title => "Roasting";
+
+    /// <summary>Logged-in user, recorded as the batch creator. Set by MainViewModel.</summary>
+    public int? CurrentUserId { get; set; }
 
     public ObservableCollection<RawMaterial> GreenBeans { get; } = new();
     public ObservableCollection<RoastingBatch> Batches { get; } = new();
@@ -51,6 +50,7 @@ public partial class RoastingViewModel : ViewModelBase
 
     // ---------- Form ----------
     [ObservableProperty] public partial bool IsFormOpen { get; set; }
+    [ObservableProperty] public partial bool IsEditing { get; set; }
     [ObservableProperty] public partial RawMaterial? SelectedGreenBean { get; set; }
     [ObservableProperty] public partial string GreenBeanUsedKg { get; set; } = string.Empty;
     [ObservableProperty] public partial string RoastedGram { get; set; } = string.Empty;
@@ -64,6 +64,19 @@ public partial class RoastingViewModel : ViewModelBase
     partial void OnGreenBeanUsedKgChanged(string value) => FormError = string.Empty;
     partial void OnRoastedGramChanged(string value) => FormError = string.Empty;
 
+    partial void OnIsEditingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(FormTitle));
+        OnPropertyChanged(nameof(FormInfo));
+    }
+
+    public string FormTitle => IsEditing ? "Edit Batch Roasting" : "Tambah Batch Roasting";
+
+    public string FormInfo => IsEditing
+        ? "Catatan: Green bean tidak bisa diganti. Perubahan jumlah akan menyesuaikan stok green bean dan roast bean sebesar selisihnya."
+        : "Catatan: Saat batch disimpan, stok green bean berkurang otomatis dan roast bean baru ditambahkan di Bahan Baku → Roast Bean.";
+
+    [RelayCommand]
     private async Task LoadAsync()
     {
         try
@@ -113,8 +126,7 @@ public partial class RoastingViewModel : ViewModelBase
             : "Tidak ada batch yang cocok dengan pencarian atau filter.";
     }
 
-    [RelayCommand]
-    private async Task OpenFormAsync()
+    private async Task<bool> LoadGreenBeansAsync()
     {
         try
         {
@@ -122,13 +134,23 @@ public partial class RoastingViewModel : ViewModelBase
             GreenBeans.Clear();
             foreach (var material in materials)
                 GreenBeans.Add(material);
+            return true;
         }
         catch (Exception exception)
         {
             StatusMessage = $"Gagal memuat green bean: {DatabaseErrorMessage.Describe(exception)}";
-            return;
+            return false;
         }
+    }
 
+    [RelayCommand]
+    private async Task OpenFormAsync()
+    {
+        if (!await LoadGreenBeansAsync())
+            return;
+
+        _editingBatch = null;
+        IsEditing = false;
         StatusMessage = string.Empty;
         SelectedGreenBean = GreenBeans.FirstOrDefault();
         GreenBeanUsedKg = string.Empty;
@@ -141,7 +163,39 @@ public partial class RoastingViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void CancelForm() => IsFormOpen = false;
+    private async Task EditBatchAsync(RoastingBatch? batch)
+    {
+        if (batch is null || !await LoadGreenBeansAsync())
+            return;
+
+        // Green bean yang sudah nonaktif tidak ada di daftar; tampilkan saja namanya
+        var material = GreenBeans.FirstOrDefault(m => m.Id == batch.RawMaterialId);
+        if (material is null)
+        {
+            material = new RawMaterial { Id = batch.RawMaterialId, Name = batch.MaterialName };
+            GreenBeans.Add(material);
+        }
+
+        _editingBatch = batch;
+        IsEditing = true;
+        StatusMessage = string.Empty;
+        SelectedGreenBean = material;
+        GreenBeanUsedKg = (batch.UsedGram / 1000m).ToString("0.##", Indonesian);
+        RoastedGram = (batch.RoastedGram ?? 0m).ToString("0.##", Indonesian);
+        RoastLevel = RoastLevels.Contains(batch.RoastLevel) ? batch.RoastLevel! : "Medium";
+        BatchDate = batch.BatchDate.Date;
+        Notes = batch.Notes ?? string.Empty;
+        FormError = string.Empty;
+        IsFormOpen = true;
+    }
+
+    [RelayCommand]
+    private void CancelForm()
+    {
+        IsFormOpen = false;
+        _editingBatch = null;
+        IsEditing = false;
+    }
 
     [RelayCommand]
     private async Task SaveFormAsync()
@@ -161,9 +215,13 @@ public partial class RoastingViewModel : ViewModelBase
             return;
         }
 
-        if (usedKg > material.StockKilograms)
+        // Saat edit, green bean yang sudah dipakai batch ini ikut dihitung tersedia
+        var editing = _editingBatch;
+        var previousKg = editing is null ? 0m : editing.UsedGram / 1000m;
+        var availableKg = material.StockKilograms + previousKg;
+        if (usedKg > availableKg)
         {
-            FormError = $"Stok tidak cukup. Tersedia {material.StockDisplay}.";
+            FormError = $"Stok tidak cukup. Tersedia {availableKg.ToString("0.##", Indonesian)} kg.";
             return;
         }
 
@@ -188,16 +246,34 @@ public partial class RoastingViewModel : ViewModelBase
         _isSaving = true;
         try
         {
-            var code = await _roasting.CreateAsync(new RoastingBatchDraft(
+            var draft = new RoastingBatchDraft(
                 material.Id,
                 usedKg,
                 roastedGram,
                 RoastLevel,
                 BatchDate ?? DateTime.Today,
-                string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim()));
+                string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim());
+
+            if (editing is null)
+            {
+                if (CurrentUserId is not { } userId)
+                {
+                    FormError = "Sesi login berakhir. Silakan masuk lagi.";
+                    return;
+                }
+
+                var code = await _roasting.CreateAsync(draft, userId);
+                StatusMessage = $"Batch {code} berhasil disimpan.";
+            }
+            else
+            {
+                await _roasting.UpdateAsync(editing.Id, draft);
+                StatusMessage = $"Batch {editing.Code} berhasil diperbarui.";
+            }
 
             IsFormOpen = false;
-            StatusMessage = $"Batch {code} berhasil disimpan.";
+            _editingBatch = null;
+            IsEditing = false;
             await LoadAsync();
         }
         catch (Exception exception)

@@ -21,6 +21,7 @@ public sealed class RoastingRepository
             SELECT
                 b.id_batch,
                 b.kode_batch,
+                b.id_biji_mentah,
                 m.nama_biji,
                 b.jumlah_biji_dipakai_gram,
                 b.hasil_roasting_gram,
@@ -44,12 +45,13 @@ public sealed class RoastingRepository
             {
                 Id = reader.GetInt32(0),
                 Code = reader.GetString(1),
-                MaterialName = reader.GetString(2),
-                UsedGram = reader.GetDecimal(3),
-                RoastedGram = reader.IsDBNull(4) ? null : reader.GetDecimal(4),
-                RoastLevel = reader.IsDBNull(5) ? null : reader.GetString(5),
-                BatchDate = reader.GetDateTime(6),
-                Notes = reader.IsDBNull(7) ? null : reader.GetString(7)
+                RawMaterialId = reader.GetInt32(2),
+                MaterialName = reader.GetString(3),
+                UsedGram = reader.GetDecimal(4),
+                RoastedGram = reader.IsDBNull(5) ? null : reader.GetDecimal(5),
+                RoastLevel = reader.IsDBNull(6) ? null : reader.GetString(6),
+                BatchDate = reader.GetDateTime(7),
+                Notes = reader.IsDBNull(8) ? null : reader.GetString(8)
             });
         }
 
@@ -63,6 +65,7 @@ public sealed class RoastingRepository
     /// </summary>
     public async Task<string> CreateAsync(
         RoastingBatchDraft draft,
+        int userId,
         CancellationToken cancellationToken = default)
     {
         var usedKg = decimal.Round(draft.UsedKilograms, 2);
@@ -78,19 +81,6 @@ public sealed class RoastingRepository
 
         try
         {
-            // 0. Pengguna sementara: pengguna pertama di tabel pengguna
-            int userId;
-            await using (var userCommand = connection.CreateCommand())
-            {
-                userCommand.Transaction = transaction;
-                userCommand.CommandText =
-                    "SELECT id_pengguna FROM pengguna ORDER BY id_pengguna LIMIT 1;";
-                if (await userCommand.ExecuteScalarAsync(cancellationToken) is not int foundUserId)
-                    throw new InvalidOperationException(
-                        "Belum ada data di tabel pengguna. Tambahkan satu pengguna dulu.");
-                userId = foundUserId;
-            }
-
             // 1. Kurangi stok green bean (hanya kalau stok cukup)
             string materialName;
             await using (var stockCommand = connection.CreateCommand())
@@ -171,6 +161,175 @@ public sealed class RoastingRepository
 
             await transaction.CommitAsync(cancellationToken);
             return code;
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Mengubah satu batch. Dalam SATU transaksi: sesuaikan stok green bean dan
+    /// stok roast bean sebesar selisihnya, catat selisih di riwayat stok, lalu
+    /// simpan perubahan batch. Green bean tidak boleh diganti.
+    /// </summary>
+    public async Task UpdateAsync(
+        int batchId,
+        RoastingBatchDraft draft,
+        CancellationToken cancellationToken = default)
+    {
+        var usedKg = decimal.Round(draft.UsedKilograms, 2);
+        var usedGram = usedKg * 1000m;
+        var roastedGram = decimal.Round(draft.RoastedGram, 2);
+
+        await using var connection =
+            await PostgresConnectionFactory.OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(
+            cancellationToken);
+
+        try
+        {
+            // 0. Ambil data lama dan kunci baris batch
+            int rawMaterialId;
+            decimal oldUsedGram;
+            decimal oldRoastedGram;
+            DateTime oldBatchTime;
+            string code;
+            string materialName;
+            int? roastedId;
+            await using (var currentCommand = connection.CreateCommand())
+            {
+                currentCommand.Transaction = transaction;
+                currentCommand.CommandText = """
+                    SELECT
+                        b.id_biji_mentah,
+                        b.jumlah_biji_dipakai_gram,
+                        b.hasil_roasting_gram,
+                        b.tanggal_batch,
+                        b.kode_batch,
+                        m.nama_biji,
+                        r.id_roasted
+                    FROM batch_roasting b
+                    INNER JOIN biji_kopi_mentah m
+                        ON m.id_biji_mentah = b.id_biji_mentah
+                    LEFT JOIN biji_kopi_roasted r
+                        ON r.id_batch = b.id_batch
+                    WHERE b.id_batch = $1
+                      AND b.is_aktif = TRUE
+                    ORDER BY r.id_roasted
+                    LIMIT 1
+                    FOR UPDATE OF b;
+                    """;
+                currentCommand.Parameters.AddWithValue(batchId);
+
+                await using var reader = await currentCommand.ExecuteReaderAsync(cancellationToken);
+                if (!await reader.ReadAsync(cancellationToken))
+                    throw new InvalidOperationException(
+                        "Batch tidak ditemukan atau sudah tidak aktif.");
+
+                rawMaterialId = reader.GetInt32(0);
+                oldUsedGram = reader.GetDecimal(1);
+                oldRoastedGram = reader.IsDBNull(2) ? 0m : reader.GetDecimal(2);
+                oldBatchTime = reader.GetDateTime(3);
+                code = reader.GetString(4);
+                materialName = reader.GetString(5);
+                roastedId = reader.IsDBNull(6) ? null : reader.GetInt32(6);
+            }
+
+            if (rawMaterialId != draft.RawMaterialId)
+                throw new InvalidOperationException(
+                    "Green bean pada batch tidak boleh diganti.");
+
+            // 1. Sesuaikan stok green bean sebesar selisih pemakaian
+            var usedDeltaKg = usedKg - oldUsedGram / 1000m;
+            if (usedDeltaKg != 0m)
+            {
+                await using (var stockCommand = connection.CreateCommand())
+                {
+                    stockCommand.Transaction = transaction;
+                    stockCommand.CommandText = """
+                        UPDATE biji_kopi_mentah
+                        SET stok_kg = stok_kg - $1
+                        WHERE id_biji_mentah = $2
+                          AND stok_kg - $1 >= 0;
+                        """;
+                    stockCommand.Parameters.AddWithValue(usedDeltaKg);
+                    stockCommand.Parameters.AddWithValue(rawMaterialId);
+
+                    if (await stockCommand.ExecuteNonQueryAsync(cancellationToken) == 0)
+                        throw new InvalidOperationException(
+                            "Stok green bean tidak cukup untuk menambah pemakaian.");
+                }
+
+                await InsertHistoryAsync(connection, transaction,
+                    rawMaterialId: rawMaterialId, roastedId: null,
+                    category: "BIJI_MENTAH",
+                    direction: usedDeltaKg > 0m ? "KELUAR" : "MASUK",
+                    quantity: Math.Abs(usedDeltaKg), unit: "KG", reference: code,
+                    cancellationToken);
+            }
+
+            // 2. Sesuaikan produk roast bean (stok, nama, catatan)
+            var roastedDelta = roastedGram - oldRoastedGram;
+            if (roastedId is int existingRoastedId)
+            {
+                await using (var roastedCommand = connection.CreateCommand())
+                {
+                    roastedCommand.Transaction = transaction;
+                    roastedCommand.CommandText = """
+                        UPDATE biji_kopi_roasted
+                        SET stok_gram = stok_gram + $1,
+                            nama_produk = $2,
+                            catatan = $3
+                        WHERE id_roasted = $4
+                          AND stok_gram + $1 >= 0;
+                        """;
+                    roastedCommand.Parameters.AddWithValue(roastedDelta);
+                    roastedCommand.Parameters.AddWithValue($"{materialName} ({draft.RoastLevel})");
+                    roastedCommand.Parameters.Add(Typed(NpgsqlDbType.Text, draft.Notes));
+                    roastedCommand.Parameters.AddWithValue(existingRoastedId);
+
+                    if (await roastedCommand.ExecuteNonQueryAsync(cancellationToken) == 0)
+                        throw new InvalidOperationException(
+                            "Hasil roast tidak bisa dikurangi sebanyak itu karena sebagian roast bean sudah terpakai atau terjual.");
+                }
+
+                if (roastedDelta != 0m)
+                {
+                    await InsertHistoryAsync(connection, transaction,
+                        rawMaterialId: null, roastedId: existingRoastedId,
+                        category: "BIJI_ROASTED",
+                        direction: roastedDelta > 0m ? "MASUK" : "KELUAR",
+                        quantity: Math.Abs(roastedDelta), unit: "GRAM", reference: code,
+                        cancellationToken);
+                }
+            }
+
+            // 3. Simpan perubahan batch (jam lama dipertahankan)
+            await using (var batchCommand = connection.CreateCommand())
+            {
+                batchCommand.Transaction = transaction;
+                batchCommand.CommandText = """
+                    UPDATE batch_roasting
+                    SET jumlah_biji_dipakai_gram = $1,
+                        hasil_roasting_gram = $2,
+                        level_roasting = $3,
+                        tanggal_batch = $4,
+                        catatan = $5
+                    WHERE id_batch = $6;
+                    """;
+                batchCommand.Parameters.AddWithValue(usedGram);
+                batchCommand.Parameters.AddWithValue(roastedGram);
+                batchCommand.Parameters.AddWithValue(draft.RoastLevel);
+                batchCommand.Parameters.Add(Typed(NpgsqlDbType.Timestamp,
+                    draft.BatchDate.Date.Add(oldBatchTime.TimeOfDay)));
+                batchCommand.Parameters.Add(Typed(NpgsqlDbType.Text, draft.Notes));
+                batchCommand.Parameters.AddWithValue(batchId);
+                await batchCommand.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {

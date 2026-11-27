@@ -66,20 +66,22 @@
                     <TextBlock Margin="0,56,0,14" Text="MENU" Foreground="#95B4A2"
                                FontSize="11" FontWeight="Bold" LetterSpacing="1.5" />
 
-                    <!-- Only Bahan Baku is built so far; the other screens will plug in here. -->
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir">
+                    <!-- Staff-only menus are hidden from customers (IsStaff). -->
+                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconDashboard}" />
                             <TextBlock Text="Dashboard" />
                         </StackPanel>
                     </Border>
-                    <Border x:Name="NavRawMaterials" Classes="navItem active" Tapped="NavRawMaterials_Tapped">
+                    <Border Classes="navItem" Classes.active="{Binding IsRawMaterialsPage}"
+                            IsVisible="{Binding IsStaff}" Tapped="NavRawMaterials_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconPackage}" />
                             <TextBlock Text="Bahan Baku" />
                         </StackPanel>
                     </Border>
-                    <Border x:Name="NavRoasting" Classes="navItem" Tapped="NavRoasting_Tapped">
+                    <Border Classes="navItem" Classes.active="{Binding IsRoastingPage}"
+                            IsVisible="{Binding IsStaff}" Tapped="NavRoasting_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconFlame}" />
                             <TextBlock Text="Batch Roasting" />
@@ -91,13 +93,13 @@
                             <TextBlock Text="Etalase" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir">
+                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconHistory}" />
                             <TextBlock Text="Riwayat" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir">
+                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconUsers}" />
                             <TextBlock Text="Pengguna" />
@@ -108,7 +110,8 @@
                 <!-- Account (pinned to the bottom) -->
                 <StackPanel DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
                     <Border Height="1" Background="#416555" />
-                    <StackPanel Orientation="Horizontal" Spacing="12" Height="68">
+                    <Grid ColumnDefinitions="*,Auto" Height="68">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Background="#E7D9BF" CornerRadius="19" Width="38" Height="38">
                             <TextBlock Text="{Binding CurrentUserInitial}" Foreground="#183B32"
                                        FontSize="15" FontWeight="Bold"
@@ -119,6 +122,10 @@
                             <TextBlock Text="{Binding CurrentUserRole}" Foreground="#A9C5B2" FontSize="11" />
                         </StackPanel>
                     </StackPanel>
+                    <Button Grid.Column="1" Content="Keluar" VerticalAlignment="Center"
+                            Background="Transparent" Foreground="#D4E1D7" FontSize="12"
+                            Command="{Binding LogoutCommand}" />
+                    </Grid>
                 </StackPanel>
             </DockPanel>
         </Border>

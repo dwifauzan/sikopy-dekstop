@@ -157,6 +157,20 @@ database/migrations/002_raw_material_constraints.sql
 
 For a new database, `database/schema.sql` already includes these constraints.
 
+## Users and roles
+
+Accounts created from the app's **Daftar** page get the role `Pelanggan`
+(customer). Customers cannot open Bahan Baku or Batch Roasting. Every other
+role is staff. To create the first staff account, register it in the app,
+then promote it:
+
+```sql
+UPDATE pengguna SET peran = 'Admin' WHERE nama_pengguna = 'your_username';
+```
+
+There is no self-service password reset. An admin resets a password (for now
+directly in the database, later from the Pengguna screen).
+
 ## Connecting the application
 
 The application uses the `Npgsql` package. It looks for the PostgreSQL

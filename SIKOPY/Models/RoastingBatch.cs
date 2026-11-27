@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace SIKOPY.Models;
 
-/// <summary>Data yang diisi di form Tambah Batch.</summary>
+/// <summary>Data yang diisi di form Tambah / Edit Batch.</summary>
 public sealed record RoastingBatchDraft(
     int RawMaterialId,
     decimal UsedKilograms,
@@ -19,6 +19,7 @@ public sealed class RoastingBatch
 
     public int Id { get; init; }
     public string Code { get; init; } = string.Empty;
+    public int RawMaterialId { get; init; }
     public string MaterialName { get; init; } = string.Empty;
     public decimal UsedGram { get; init; }
     public decimal? RoastedGram { get; init; }

@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SIKOPY.Database;
+using SIKOPY.Models;
 
 namespace SIKOPY.ViewModels;
 
 public partial class RegisterViewModel : ViewModelBase
 {
-    private const string DefaultCustomerRole = "Pelanggan";
     private readonly AuthRepository _repository = new();
     private readonly Action<string> _onRegisterSuccess;
     private readonly Action _onNavigateToLogin;
@@ -150,7 +150,7 @@ public partial class RegisterViewModel : ViewModelBase
                 username,
                 Password,
                 fullName,
-                DefaultCustomerRole,
+                UserAccount.CustomerRole,
                 cancellationToken);
 
             Reset();

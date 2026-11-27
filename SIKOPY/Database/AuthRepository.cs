@@ -110,30 +110,4 @@ public sealed class AuthRepository
             Role = reader.GetString(3)
         };
     }
-
-    public async Task<bool> ResetPasswordAsync(
-        string username,
-        string newPassword,
-        CancellationToken cancellationToken = default)
-    {
-        var trimmedUsername = username.Trim();
-        ArgumentException.ThrowIfNullOrWhiteSpace(trimmedUsername);
-        ArgumentException.ThrowIfNullOrEmpty(newPassword);
-
-        var passwordHash = PasswordHasher.Hash(newPassword);
-
-        await using var connection = await PostgresConnectionFactory.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand(
-            """
-            UPDATE pengguna
-            SET kata_sandi = @passwordHash
-            WHERE nama_pengguna = @username;
-            """,
-            connection);
-        command.Parameters.AddWithValue("username", trimmedUsername);
-        command.Parameters.AddWithValue("passwordHash", passwordHash);
-
-        var affectedRows = await command.ExecuteNonQueryAsync(cancellationToken);
-        return affectedRows > 0;
-    }
 }
