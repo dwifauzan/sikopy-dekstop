@@ -1,16 +1,22 @@
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using SIKOPY.Database;
 using SIKOPY.Models;
 
 namespace SIKOPY.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private readonly RoastingRepository _roastingRepository = new();
+    private bool _isLoadingShop;
     public LoginViewModel Login { get; }
     public RegisterViewModel Register { get; }
     public ForgotPasswordViewModel ForgotPassword { get; }
     public RawMaterialsViewModel RawMaterials { get; } = new();
     public RoastingViewModel Roasting { get; } = new();
-    public CustomerHomeViewModel CustomerHome { get; } = new();
+    public ShopWindowViewModel Shop { get; } = new();
 
     private UserAccount? _currentUser;
     public UserAccount? CurrentUser
@@ -46,12 +52,14 @@ public partial class MainViewModel : ViewModelBase
             {
                 OnPropertyChanged(nameof(IsRawMaterialsPage));
                 OnPropertyChanged(nameof(IsRoastingPage));
+                OnPropertyChanged(nameof(IsShopPage));
             }
         }
     }
 
     public bool IsRawMaterialsPage => CurrentPage == RawMaterials;
     public bool IsRoastingPage => CurrentPage == Roasting;
+    public bool IsShopPage => CurrentPage == Shop;
 
     public MainViewModel()
     {
@@ -99,17 +107,40 @@ public partial class MainViewModel : ViewModelBase
         ShowLogin();
     }
 
+    private async Task LoadShopProductsAsync()
+    {
+        if (_isLoadingShop)
+            return;
+
+        _isLoadingShop = true;
+        try
+        {
+            var batches = await _roastingRepository.GetBatchesAsync(500);
+            Shop.LoadProducts(batches);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Gagal memuat produk etalase: {ex.Message}");
+        }
+        finally
+        {
+            _isLoadingShop = false;
+        }
+    }
+    
     private void OnLoginSucceeded(UserAccount user)
     {
         CurrentUser = user;
-        if (IsStaff)
-        {
-            ShowRawMaterials();
-        }
-        else
-        {
-            CustomerHome.Greeting = $"Halo, {user.FullName}!";
-            CurrentPage = CustomerHome;
-        }
+        // Customers only get the Etalase.
+        if (IsStaff) ShowRawMaterials();
+        else ShowShop();
     }
+    
+    public void ShowShop()
+    {
+        CurrentPage = Shop;
+        _ = LoadShopProductsAsync();
+    }
+
+    
 }

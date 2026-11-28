@@ -20,4 +20,9 @@ public partial class MainView : UserControl
     {
         if (DataContext is MainViewModel vm) vm.ShowRoasting();
     }
+
+    private void NavShop_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.ShowShop();
+    }
 }

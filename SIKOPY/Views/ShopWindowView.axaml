@@ -1,0 +1,633 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1192" d:DesignHeight="900"
+             x:Class="SIKOPY.Views.ShopWindowView"
+             x:DataType="vm:ShopWindowViewModel"
+             Background="#F4F1EB">
+
+    <Design.DataContext>
+        <vm:ShopWindowViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <!-- Tombol Utama Hijau Roastery -->
+        <Style Selector="Button.primaryAction">
+            <Setter Property="Background" Value="#204E3E" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.primaryAction:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A634F" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.primaryAction:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#183B32" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.primaryAction:disabled /template/ ContentPresenter">
+            <Setter Property="Background" Value="#C8CEC9" />
+            <Setter Property="Foreground" Value="#F4F6F5" />
+        </Style>
+
+        <!-- Tombol Stepper (+/-) pada Keranjang -->
+        <Style Selector="Button.stepperBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#1C2B23" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.stepperBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F4F1EB" />
+        </Style>
+        <Style Selector="Button.stepperBtn:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#B9C0BC" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <!-- Tombol Hapus Item Keranjang -->
+        <Style Selector="Button.removeBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#B45A4E" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.removeBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FDF2F0" />
+            <Setter Property="Foreground" Value="#9E4236" />
+        </Style>
+
+        <!-- Search Input Bersih -->
+        <Style Selector="TextBox.searchInput">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#1C2B23" />
+        </Style>
+        <Style Selector="TextBox.searchInput:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.searchInput:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- =============================================================== -->
+        <!-- HALAMAN UTAMA ETALASE TOKO                                      -->
+        <!-- =============================================================== -->
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="36,30,36,24">
+            <!-- Header Judul & Tombol Keranjang -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,22">
+                <StackPanel VerticalAlignment="Center" Spacing="4">
+                    <TextBlock Text="Etalase Toko"
+                               FontSize="26"
+                               FontWeight="Bold"
+                               Foreground="#1C2B23" />
+                    <TextBlock Text="Roast bean pilihan, siap untuk dinikmati"
+                               FontSize="13"
+                               Foreground="#727E77" />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Classes="primaryAction"
+                        Command="{Binding OpenCartCommand}"
+                        Padding="16,9"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <PathIcon Data="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2zM7.17 14.75l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20 4H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7.42c-.14 0-.25-.11-.25-.25z"
+                                  Width="16"
+                                  Height="16"
+                                  Foreground="White" />
+                        <TextBlock Text="Keranjang"
+                                   FontSize="13.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center" />
+                        <Border Background="#F4F1EB"
+                                CornerRadius="11"
+                                MinWidth="22"
+                                Height="22"
+                                Padding="6,0">
+                            <TextBlock Text="{Binding CartBadgeCount}"
+                                       FontSize="11.5"
+                                       FontWeight="Bold"
+                                       Foreground="#183B32"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Bar Subheader, Pencarian & Pengurutan -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*" Margin="0,0,0,20">
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="Roast bean"
+                               FontSize="15.5"
+                               FontWeight="Bold"
+                               Foreground="#1C2B23"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding FilteredProductCountText}"
+                               FontSize="12.5"
+                               Foreground="#7E8982"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Kolom Pencarian -->
+                <Border Grid.Column="1"
+                        Width="350"
+                        Height="40"
+                        Background="#FFFFFF"
+                        BorderBrush="#E2DDD3"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12,0">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0"
+                                  Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
+                                  Width="15"
+                                  Height="15"
+                                  Foreground="#8A948E"
+                                  Margin="0,0,8,0"
+                                  VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1"
+                                 Classes="searchInput"
+                                 Text="{Binding SearchQuery, Mode=TwoWay}"
+                                 Watermark="Cari produk roast bean..." />
+                    </Grid>
+                </Border>
+
+                <!-- Dropdown Pengurutan -->
+                <ComboBox Grid.Column="2"
+                          HorizontalAlignment="Right"
+                          MinWidth="154"
+                          Height="40"
+                          ItemsSource="{Binding SortOptions}"
+                          SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}"
+                          Background="#FFFFFF"
+                          BorderBrush="#E2DDD3"
+                          BorderThickness="1"
+                          CornerRadius="10"
+                          Padding="12,0"
+                          FontSize="13"
+                          Foreground="#1C2B23"
+                          VerticalContentAlignment="Center" />
+            </Grid>
+
+            <!-- Banner Notifikasi Status Dinamis -->
+            <Border Grid.Row="2"
+                    IsVisible="{Binding HasStatusMessage}"
+                    Background="#EAF6EC"
+                    BorderBrush="#C5E2CB"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="14,9"
+                    Margin="0,0,0,16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="12.5"
+                               FontWeight="Medium"
+                               Foreground="#22533F"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="1"
+                            Command="{Binding ClearStatusMessageCommand}"
+                            Background="Transparent"
+                            Padding="6,2"
+                            Cursor="Hand"
+                            Content="✕"
+                            FontSize="12"
+                            Foreground="#22533F" />
+                </Grid>
+            </Border>
+
+            <!-- Daftar Kartu Produk (Grid 2 Kolom) -->
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding FilteredProducts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="2" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ShopProductItem">
+                                <Border Background="#FFFFFF"
+                                        BorderBrush="#E5E0D6"
+                                        BorderThickness="1"
+                                        CornerRadius="14"
+                                        Padding="16"
+                                        Margin="0,0,16,16">
+                                    <Grid ColumnDefinitions="108,*">
+                                        <!-- Kotak Ikon Kopi & Kode Batch -->
+                                        <Border Grid.Column="0"
+                                                Width="108"
+                                                Height="132"
+                                                Background="#F6EFE2"
+                                                CornerRadius="10">
+                                            <StackPanel HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Spacing="8">
+                                                <PathIcon Data="M2 21h18v-2H2v2zm2-4h10a4 4 0 0 0 4-4v-1h1a3 3 0 0 0 0-6h-1V5H4v8a4 4 0 0 0 4 4zm14-9h1a1 1 0 0 1 0 2h-1V8zM7 2h2v2H7V2zm3 0h2v2h-2V2zm3 0h2v2h-2V2z"
+                                                          Width="28"
+                                                          Height="28"
+                                                          Foreground="#8C6239" />
+                                                <TextBlock Text="{Binding Code}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#8C6239"
+                                                           HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Detail Produk & Tombol Beli -->
+                                        <Grid Grid.Column="1"
+                                              RowDefinitions="Auto,Auto,Auto,*"
+                                              Margin="16,2,0,2">
+                                            <!-- Nama Produk & Badge Roast Level -->
+                                            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding MaterialName}"
+                                                           FontSize="16"
+                                                           FontWeight="Bold"
+                                                           Foreground="#1C2B23"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,8,0" />
+                                                <Border Grid.Column="1"
+                                                        Background="#F7EEDB"
+                                                        CornerRadius="6"
+                                                        Padding="8,3"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding LevelDisplay}"
+                                                               FontSize="10.5"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#A67C46" />
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Origin -->
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding Origin}"
+                                                       FontSize="12"
+                                                       Foreground="#7C8780"
+                                                       Margin="0,2,0,0" />
+
+                                            <!-- Catatan Rasa -->
+                                            <TextBlock Grid.Row="2"
+                                                       Text="{Binding NotesDisplay}"
+                                                       FontSize="12"
+                                                       FontStyle="Italic"
+                                                       Foreground="#5E6A63"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,6,0,0" />
+
+                                            <!-- Stok, Harga & Tombol Beli -->
+                                            <Grid Grid.Row="3"
+                                                  ColumnDefinitions="*,Auto"
+                                                  VerticalAlignment="Bottom"
+                                                  Margin="0,16,0,0">
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Bottom" Spacing="2">
+                                                    <TextBlock Text="{Binding StockDisplay}"
+                                                               FontSize="11"
+                                                               Foreground="#7C8780" />
+                                                    <TextBlock Text="{Binding PricePerGramDisplay}"
+                                                               FontSize="16.5"
+                                                               FontWeight="Bold"
+                                                               Foreground="#1C2B23" />
+                                                </StackPanel>
+
+                                                <Button Grid.Column="1"
+                                                        Classes="primaryAction"
+                                                        Command="{Binding BuyCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="14,8"
+                                                        CornerRadius="8"
+                                                        VerticalAlignment="Bottom">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <PathIcon Data="M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6-2c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm6 16H6V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h4v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z"
+                                                                  Width="13"
+                                                                  Height="13"
+                                                                  Foreground="White" />
+                                                        <TextBlock Text="Beli"
+                                                                   FontSize="12.5"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="White" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Empty State Pencarian -->
+                    <Border IsVisible="{Binding IsFilteredProductsEmpty}"
+                            Background="#FFFFFF"
+                            BorderBrush="#E5E0D6"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="32,48"
+                            Margin="0,4,16,0">
+                        <StackPanel HorizontalAlignment="Center" Spacing="6">
+                            <TextBlock Text="Produk roast bean tidak ditemukan"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       Foreground="#1C2B23"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="Coba ubah kata kunci pencarian atau pilih urutan lainnya."
+                                       FontSize="12.5"
+                                       Foreground="#7C8780"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- =============================================================== -->
+        <!-- POPUP MODAL KERANJANG (OVERLAY)                                 -->
+        <!-- =============================================================== -->
+        <Grid IsVisible="{Binding IsCartPopupVisible}">
+            <!-- Backdrop Gelap (klik di luar popup menutup modal) -->
+            <Border Background="#73141E19"
+                    PointerPressed="Backdrop_PointerPressed" />
+
+            <!-- Kontainer Modal Keranjang -->
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="780"
+                    MaxHeight="740"
+                    Background="#FFFFFF"
+                    CornerRadius="18"
+                    Padding="28,24"
+                    BoxShadow="0 18 44 0 #38000000">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
+                    <!-- Header Modal -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="Keranjang"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="#1C2B23" />
+                            <TextBlock Text="Simpan produk untuk dilihat dan dikelola nanti"
+                                       FontSize="12.5"
+                                       Foreground="#7C8780" />
+                        </StackPanel>
+
+                        <Button Grid.Column="1"
+                                Command="{Binding CloseCartCommand}"
+                                Background="Transparent"
+                                Padding="8"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                VerticalAlignment="Top">
+                            <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                                      Width="16"
+                                      Height="16"
+                                      Foreground="#5E6A63" />
+                        </Button>
+                    </Grid>
+
+                    <!-- Banner Penghitung Dinamis -->
+                    <Border Grid.Row="1"
+                            Background="#EAF6EC"
+                            CornerRadius="10"
+                            Padding="14,10"
+                            Margin="0,18,0,14">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <PathIcon Data="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"
+                                      Width="15"
+                                      Height="15"
+                                      Foreground="#255A44" />
+                            <TextBlock Text="{Binding CartHeaderSummaryText}"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="#255A44"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Daftar Item Keranjang / Empty State -->
+                    <ScrollViewer Grid.Row="2"
+                                  MaxHeight="340"
+                                  VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding CartItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CartItemViewModel">
+                                        <Border Background="#FFFFFF"
+                                                BorderBrush="#E5E0D6"
+                                                BorderThickness="1"
+                                                CornerRadius="12"
+                                                Padding="16"
+                                                Margin="0,0,0,12">
+                                            <StackPanel Spacing="14">
+                                                <!-- Baris Atas: Thumbnail, Info Produk & Tombol Hapus -->
+                                                <Grid ColumnDefinitions="60,*,Auto">
+                                                    <Border Grid.Column="0"
+                                                            Width="60"
+                                                            Height="68"
+                                                            Background="#F6EFE2"
+                                                            CornerRadius="8">
+                                                        <StackPanel HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Spacing="4">
+                                                            <PathIcon Data="M2 21h18v-2H2v2zm2-4h10a4 4 0 0 0 4-4v-1h1a3 3 0 0 0 0-6h-1V5H4v8a4 4 0 0 0 4 4zm14-9h1a1 1 0 0 1 0 2h-1V8zM7 2h2v2H7V2zm3 0h2v2h-2V2zm3 0h2v2h-2V2z"
+                                                                      Width="20"
+                                                                      Height="20"
+                                                                      Foreground="#8C6239" />
+                                                            <TextBlock Text="{Binding Code}"
+                                                                       FontSize="9.5"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="#8C6239"
+                                                                       HorizontalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Border>
+
+                                                    <StackPanel Grid.Column="1"
+                                                                Margin="14,0,12,0"
+                                                                VerticalAlignment="Center"
+                                                                Spacing="2">
+                                                        <TextBlock Text="{Binding MaterialName}"
+                                                                   FontSize="15"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="#1C2B23" />
+                                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                                            <TextBlock Text="{Binding Origin}"
+                                                                       FontSize="11.5"
+                                                                       Foreground="#7C8780" />
+                                                            <TextBlock Text="·"
+                                                                       FontSize="11.5"
+                                                                       Foreground="#7C8780" />
+                                                            <TextBlock Text="{Binding LevelDisplay}"
+                                                                       FontSize="11.5"
+                                                                       Foreground="#7C8780" />
+                                                            <TextBlock Text="·"
+                                                                       FontSize="11.5"
+                                                                       Foreground="#7C8780" />
+                                                            <TextBlock Text="{Binding Code}"
+                                                                       FontSize="11.5"
+                                                                       Foreground="#7C8780" />
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Product.NotesDisplay}"
+                                                                   FontSize="11.5"
+                                                                   FontStyle="Italic"
+                                                                   Foreground="#5E6A63"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   Margin="0,2,0,0" />
+                                                    </StackPanel>
+
+                                                    <Button Grid.Column="2"
+                                                            Classes="removeBtn"
+                                                            Command="{Binding RemoveCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            VerticalAlignment="Top">
+                                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                                            <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                                                                      Width="13"
+                                                                      Height="13"
+                                                                      Foreground="#B45A4E" />
+                                                            <TextBlock Text="Hapus"
+                                                                       FontSize="12"
+                                                                       FontWeight="Medium" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+
+                                                <!-- Baris Bawah: Stepper Gram & Harga Satuan -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0"
+                                                                Orientation="Horizontal"
+                                                                Spacing="12"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="Jumlah disimpan"
+                                                                   FontSize="12"
+                                                                   Foreground="#7C8780"
+                                                                   VerticalAlignment="Center" />
+                                                        <Border Background="#FFFFFF"
+                                                                BorderBrush="#DDD7CC"
+                                                                BorderThickness="1"
+                                                                CornerRadius="8"
+                                                                Padding="2">
+                                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                <Button Classes="stepperBtn"
+                                                                        Content="-"
+                                                                        Command="{Binding DecreaseCommand}"
+                                                                        CommandParameter="{Binding}" />
+                                                                <TextBlock Text="{Binding SavedGramDisplay}"
+                                                                           MinWidth="66"
+                                                                           TextAlignment="Center"
+                                                                           VerticalAlignment="Center"
+                                                                           FontSize="12.5"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#1C2B23" />
+                                                                <Button Classes="stepperBtn"
+                                                                        Content="+"
+                                                                        Command="{Binding IncreaseCommand}"
+                                                                        CommandParameter="{Binding}" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="1"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Bottom"
+                                                                Spacing="1">
+                                                        <TextBlock Text="{Binding Product.StockDisplay}"
+                                                                   FontSize="10.5"
+                                                                   Foreground="#8A948E"
+                                                                   HorizontalAlignment="Right" />
+                                                        <TextBlock Text="{Binding Product.PricePerGramDisplay}"
+                                                                   FontSize="14.5"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="#1C2B23"
+                                                                   HorizontalAlignment="Right" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Empty State Saat Keranjang Kosong -->
+                            <Border IsVisible="{Binding IsCartEmpty}"
+                                    Background="#FAF8F4"
+                                    BorderBrush="#E5E0D6"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="24,36"
+                                    Margin="0,0,0,12">
+                                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                    <TextBlock Text="Keranjang masih kosong"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="#1C2B23"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Text="Tekan tombol Beli pada produk di etalase untuk menyimpannya ke keranjang."
+                                               FontSize="12"
+                                               Foreground="#7C8780"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Catatan Keterangan Simpan Keranjang -->
+                    <Border Grid.Row="3"
+                            Background="#FAF8F4"
+                            BorderBrush="#E5E0D6"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="14,11"
+                            Margin="0,4,0,18">
+                        <TextBlock Text="Simpan keranjang untuk membuka kembali produk dan detailnya nanti. Pembelian tidak dilakukan di sini."
+                                   FontSize="12"
+                                   Foreground="#6C7770" />
+                    </Border>
+
+                    <!-- Footer Modal: Ringkasan & Simpan Keranjang -->
+                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding CartFooterSummaryText}"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   Foreground="#6C7770"
+                                   VerticalAlignment="Center" />
+
+                        <Button Grid.Column="1"
+                                Classes="primaryAction"
+                                Command="{Binding SaveCartCommand}"
+                                Padding="18,11">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <PathIcon Data="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"
+                                          Width="15"
+                                          Height="15"
+                                          Foreground="White" />
+                                <TextBlock Text="Simpan Keranjang"
+                                           FontSize="13.5"
+                                           FontWeight="SemiBold"
+                                           Foreground="White" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
