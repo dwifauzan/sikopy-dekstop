@@ -17,8 +17,7 @@ public static class DatabaseErrorMessage
             $"File {PostgresConnectionFactory.LocalSettingsFileName} tidak valid. Periksa penulisan JSON-nya.",
 
         RawMaterialInUseException { BatchCount: var count } =>
-            $"Green bean ini sudah dipakai di {count} batch roasting sehingga tidak bisa dihapus. " +
-            "Gunakan \"Nonaktifkan\" untuk menyembunyikannya.",
+            $"Green bean ini sudah dipakai di {count} batch roasting sehingga tidak bisa dihapus.",
         InvalidOperationException { Message: var message } when message.StartsWith("The selected raw material does not exist", StringComparison.Ordinal) =>
             "Green bean tidak ditemukan atau sudah tidak aktif. Muat ulang daftar.",
 

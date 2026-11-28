@@ -522,7 +522,7 @@ public partial class RawMaterialsViewModel : ViewModelBase
         }
         catch (Exception exception)
         {
-            // Keep the dialog open so the user can read why and choose "Nonaktifkan" instead.
+            // Keep the dialog open so the user can read why.
             DeleteError = $"Gagal menghapus: {DatabaseErrorMessage.Describe(exception)}";
         }
     }

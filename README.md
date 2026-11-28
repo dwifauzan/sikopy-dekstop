@@ -122,7 +122,7 @@ After login, staff land on the **Dashboard** and customers land on the **Etalase
 
 ### Pengguna (users, admin only)
 - **Ubah peran:** change someone's role.
-- **Reset password:** generates a random password and shows it once, so you can give it to the user. There is no "forgot password" page; users ask an admin.
+- **Reset password:** generates a random password and shows it once, so you can give it to the user. **Lupa password?** on the login page only tells users to ask an admin; there is no self-service reset.
 - **Nonaktifkan / Aktifkan:** a deactivated account can't log in, but its data stays.
 - Safety rules:
   - The last active admin can't be demoted or deactivated.
@@ -230,7 +230,7 @@ dotnet workload install android ios     # + wasm-tools for Browser
 |---|---|---|
 | Browser | `dotnet run --project SIKOPY.Browser` | `https://localhost:7169` |
 | Android | `dotnet build SIKOPY.Android -t:Run -f net10.0-android` | Needs **JDK 21** (newer JDKs fail with `XA0030`) and Android SDK platform **36** exactly |
-| iOS | `dotnet build SIKOPY.iOS -t:Run -f net10.0-ios` | macOS only, needs Xcode (`sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`) |
+| iOS | `dotnet build SIKOPY.iOS -t:Run -f net10.0-ios` | macOS only, needs Xcode: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, `sudo xcodebuild -license accept`, then `xcodebuild -downloadPlatform iOS` for the simulator |
 
 To install the Android SDK platform 36 that the build needs, run this. Adjust both paths for your machine.
 
