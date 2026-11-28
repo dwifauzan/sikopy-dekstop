@@ -1,0 +1,251 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             mc:Ignorable="d" d:DesignWidth="1192" d:DesignHeight="900"
+             x:Class="SIKOPY.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel"
+             Background="#F4F1EB">
+    <Design.DataContext>
+        <vm:HistoryViewModel />
+    </Design.DataContext>
+
+    <!-- Same look as the tables on the Bahan Baku page. -->
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DFE6DF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.tableHead">
+            <Setter Property="Background" Value="#F7F9F6" />
+            <Setter Property="BorderBrush" Value="#E3E9E2" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="50" />
+        </Style>
+        <Style Selector="Border.tableRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#EDF1EB" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="52" />
+        </Style>
+        <Style Selector="Border.tableRow:pointerover">
+            <Setter Property="Background" Value="#F9FBF8" />
+        </Style>
+        <Style Selector="TextBlock.cell">
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#475C50" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.cell.name">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.cell.stock">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge TextBlock">
+            <Setter Property="Foreground" Value="#2D614E" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.badge.outgoing">
+            <Setter Property="Background" Value="#FBEAE8" />
+        </Style>
+        <Style Selector="Border.badge.outgoing TextBlock">
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+        <Style Selector="Border.status">
+            <Setter Property="Background" Value="#FBEAE8" />
+            <Setter Property="BorderBrush" Value="#F2C9C5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="40,38" Spacing="20">
+
+            <!-- ===== Page intro ===== -->
+            <Grid ColumnDefinitions="*,Auto" MinHeight="72">
+                <StackPanel Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Riwayat" Foreground="#183B32"
+                               FontSize="30" FontWeight="Bold" />
+                    <TextBlock Text="Semua mutasi stok dan penjualan"
+                               Foreground="#718279" FontSize="14" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                            VerticalAlignment="Center">
+                    <Button Classes.primary="{Binding IsStockTab}"
+                            Classes.secondary="{Binding IsSalesTab}"
+                            Content="Mutasi Stok" Command="{Binding ShowStockTabCommand}" />
+                    <Button Classes.primary="{Binding IsSalesTab}"
+                            Classes.secondary="{Binding IsStockTab}"
+                            Content="Penjualan" Command="{Binding ShowSalesTabCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <Border Classes="status" IsVisible="{Binding HasStatus}">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#A8322A"
+                           FontSize="13" TextWrapping="Wrap" />
+            </Border>
+
+            <!-- ===== Stock history ===== -->
+            <StackPanel Spacing="20" IsVisible="{Binding IsStockTab}">
+                <Border Background="White" BorderBrush="#DFE6DF" BorderThickness="1"
+                        CornerRadius="10" Padding="10,7">
+                    <Grid ColumnDefinitions="*,150,150,150,Auto,Auto" ColumnSpacing="10">
+                        <TextBox Classes="field" Height="42" Padding="4,0,14,0"
+                                 Text="{Binding SearchText}"
+                                 PlaceholderText="Cari produk atau referensi (batch / invoice)...">
+                            <TextBox.InnerLeftContent>
+                                <PathIcon Data="{StaticResource IconSearch}" Width="19" Height="19"
+                                          Foreground="#98A2B3" Margin="14,0,8,0" />
+                            </TextBox.InnerLeftContent>
+                            <TextBox.KeyBindings>
+                                <KeyBinding Gesture="Enter" Command="{Binding LoadCommand}" />
+                            </TextBox.KeyBindings>
+                        </TextBox>
+                        <ComboBox Grid.Column="1" Classes="field" Height="42"
+                                  ItemsSource="{Binding DirectionOptions}"
+                                  SelectedItem="{Binding SelectedDirection}" />
+                        <CalendarDatePicker Grid.Column="2" Classes="field" Height="42"
+                                            SelectedDate="{Binding FromDate}"
+                                            PlaceholderText="Dari tanggal" />
+                        <CalendarDatePicker Grid.Column="3" Classes="field" Height="42"
+                                            SelectedDate="{Binding ToDate}"
+                                            PlaceholderText="Sampai tanggal" />
+                        <Button Grid.Column="4" Classes="primary" Content="Terapkan"
+                                Command="{Binding LoadCommand}" />
+                        <Button Grid.Column="5" Classes="secondary" Content="Reset"
+                                Command="{Binding ResetFiltersCommand}" />
+                    </Grid>
+                </Border>
+
+                <Grid ColumnDefinitions="*,Auto" Height="30">
+                    <TextBlock Classes="sectionTitle" Text="Mutasi Stok" />
+                    <TextBlock Grid.Column="1" Classes="muted" Text="{Binding StockCountText}" />
+                </Grid>
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="tableHead">
+                            <Grid ColumnDefinitions="170,110,2*,100,120,2*">
+                                <TextBlock Grid.Column="0" Classes="tableHeader" Text="TANGGAL" />
+                                <TextBlock Grid.Column="1" Classes="tableHeader" Text="JENIS" />
+                                <TextBlock Grid.Column="2" Classes="tableHeader" Text="PRODUK" />
+                                <TextBlock Grid.Column="3" Classes="tableHeader" Text="ARAH" />
+                                <TextBlock Grid.Column="4" Classes="tableHeader" Text="JUMLAH" />
+                                <TextBlock Grid.Column="5" Classes="tableHeader" Text="REFERENSI" />
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding StockHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:StockHistoryEntry">
+                                    <Border Classes="tableRow">
+                                        <Grid ColumnDefinitions="170,110,2*,100,120,2*">
+                                            <TextBlock Grid.Column="0" Classes="cell"
+                                                       Text="{Binding OccurredAtDisplay}" />
+                                            <TextBlock Grid.Column="1" Classes="cell"
+                                                       Text="{Binding CategoryDisplay}" />
+                                            <TextBlock Grid.Column="2" Classes="cell name"
+                                                       Text="{Binding MaterialName}"
+                                                       ToolTip.Tip="{Binding MaterialName}" />
+                                            <Border Grid.Column="3" Classes="badge"
+                                                    Classes.outgoing="{Binding !IsIncoming}">
+                                                <TextBlock Text="{Binding Direction}" />
+                                            </Border>
+                                            <TextBlock Grid.Column="4" Classes="cell stock"
+                                                       Text="{Binding QuantityDisplay}" />
+                                            <TextBlock Grid.Column="5" Classes="cell"
+                                                       Text="{Binding ReferenceDisplay}"
+                                                       ToolTip.Tip="{Binding ReferenceDisplay}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="16,20" Text="Tidak ada riwayat stok untuk filter ini."
+                                   Foreground="#718279" FontSize="13"
+                                   IsVisible="{Binding !HasStockHistory}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- ===== Sales ===== -->
+            <StackPanel Spacing="20" IsVisible="{Binding IsSalesTab}">
+                <Grid ColumnDefinitions="*,Auto" Height="30">
+                    <TextBlock Classes="sectionTitle" Text="Daftar Penjualan" />
+                    <TextBlock Grid.Column="1" Classes="muted" Text="{Binding SalesSummaryText}" />
+                </Grid>
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="tableHead">
+                            <Grid ColumnDefinitions="170,190,160,3*,140">
+                                <TextBlock Grid.Column="0" Classes="tableHeader" Text="TANGGAL" />
+                                <TextBlock Grid.Column="1" Classes="tableHeader" Text="INVOICE" />
+                                <TextBlock Grid.Column="2" Classes="tableHeader" Text="PELANGGAN" />
+                                <TextBlock Grid.Column="3" Classes="tableHeader" Text="PRODUK" />
+                                <TextBlock Grid.Column="4" Classes="tableHeader" Text="TOTAL" />
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding Sales}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:SaleSummary">
+                                    <Border Classes="tableRow">
+                                        <Grid ColumnDefinitions="170,190,160,3*,140">
+                                            <TextBlock Grid.Column="0" Classes="cell"
+                                                       Text="{Binding SoldAtDisplay}" />
+                                            <TextBlock Grid.Column="1" Classes="cell name"
+                                                       Text="{Binding Invoice}" />
+                                            <TextBlock Grid.Column="2" Classes="cell"
+                                                       Text="{Binding CustomerName}" />
+                                            <TextBlock Grid.Column="3" Classes="cell"
+                                                       Text="{Binding ItemsSummary}"
+                                                       ToolTip.Tip="{Binding ItemsSummary}" />
+                                            <TextBlock Grid.Column="4" Classes="cell stock"
+                                                       Text="{Binding TotalDisplay}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="16,20" Text="Belum ada penjualan."
+                                   Foreground="#718279" FontSize="13"
+                                   IsVisible="{Binding !HasSales}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

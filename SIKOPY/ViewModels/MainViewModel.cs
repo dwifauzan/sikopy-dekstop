@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using SIKOPY.Database;
@@ -9,14 +8,13 @@ namespace SIKOPY.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private readonly RoastingRepository _roastingRepository = new();
-    private bool _isLoadingShop;
     public LoginViewModel Login { get; }
     public RegisterViewModel Register { get; }
     public ForgotPasswordViewModel ForgotPassword { get; }
     public RawMaterialsViewModel RawMaterials { get; } = new();
     public RoastingViewModel Roasting { get; } = new();
     public ShopWindowViewModel Shop { get; } = new();
+    public HistoryViewModel History { get; } = new();
 
     private UserAccount? _currentUser;
     public UserAccount? CurrentUser
@@ -27,6 +25,8 @@ public partial class MainViewModel : ViewModelBase
             if (SetProperty(ref _currentUser, value))
             {
                 Roasting.CurrentUserId = value?.Id;
+                Shop.CurrentUserId = value?.Id;
+                Shop.CustomerName = value?.FullName;
                 OnPropertyChanged(nameof(IsAuthenticated));
                 OnPropertyChanged(nameof(IsStaff));
                 OnPropertyChanged(nameof(CurrentUserName));
@@ -53,6 +53,7 @@ public partial class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsRawMaterialsPage));
                 OnPropertyChanged(nameof(IsRoastingPage));
                 OnPropertyChanged(nameof(IsShopPage));
+                OnPropertyChanged(nameof(IsHistoryPage));
             }
         }
     }
@@ -60,6 +61,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsRawMaterialsPage => CurrentPage == RawMaterials;
     public bool IsRoastingPage => CurrentPage == Roasting;
     public bool IsShopPage => CurrentPage == Shop;
+    public bool IsHistoryPage => CurrentPage == History;
 
     public MainViewModel()
     {
@@ -86,6 +88,13 @@ public partial class MainViewModel : ViewModelBase
         _ = Roasting.LoadCommand.ExecuteAsync(null);
     }
 
+    public void ShowHistory()
+    {
+        if (!IsStaff) return;
+        CurrentPage = History;
+        _ = History.LoadCommand.ExecuteAsync(null);
+    }
+
     private void ShowLogin(string? prefillUsername = null, string? statusMessage = null)
     {
         Login.Reset(prefillUsername, statusMessage);
@@ -107,27 +116,6 @@ public partial class MainViewModel : ViewModelBase
         ShowLogin();
     }
 
-    private async Task LoadShopProductsAsync()
-    {
-        if (_isLoadingShop)
-            return;
-
-        _isLoadingShop = true;
-        try
-        {
-            var batches = await _roastingRepository.GetBatchesAsync(500);
-            Shop.LoadProducts(batches);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Gagal memuat produk etalase: {ex.Message}");
-        }
-        finally
-        {
-            _isLoadingShop = false;
-        }
-    }
-    
     private void OnLoginSucceeded(UserAccount user)
     {
         CurrentUser = user;
@@ -139,7 +127,7 @@ public partial class MainViewModel : ViewModelBase
     public void ShowShop()
     {
         CurrentPage = Shop;
-        _ = LoadShopProductsAsync();
+        _ = Shop.LoadAsync();
     }
 
     

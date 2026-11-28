@@ -93,7 +93,8 @@
                             <TextBlock Text="Etalase" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
+                    <Border Classes="navItem" Classes.active="{Binding IsHistoryPage}"
+                            IsVisible="{Binding IsStaff}" Tapped="NavHistory_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconHistory}" />
                             <TextBlock Text="Riwayat" />

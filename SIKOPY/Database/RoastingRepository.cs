@@ -633,7 +633,7 @@ public sealed class RoastingRepository
         return (int)(await command.ExecuteScalarAsync(cancellationToken))!;
     }
 
-    private static async Task InsertHistoryAsync(
+    internal static async Task InsertHistoryAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         int? rawMaterialId,
@@ -663,6 +663,6 @@ public sealed class RoastingRepository
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static NpgsqlParameter Typed(NpgsqlDbType type, object? value) =>
+    internal static NpgsqlParameter Typed(NpgsqlDbType type, object? value) =>
         new() { NpgsqlDbType = type, Value = value ?? DBNull.Value };
 }

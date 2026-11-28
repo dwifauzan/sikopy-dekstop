@@ -25,4 +25,9 @@ public partial class MainView : UserControl
     {
         if (DataContext is MainViewModel vm) vm.ShowShop();
     }
+
+    private void NavHistory_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.ShowHistory();
+    }
 }

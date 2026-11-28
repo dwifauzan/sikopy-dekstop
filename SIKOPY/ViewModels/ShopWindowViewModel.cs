@@ -7,8 +7,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using SIKOPY.Database;
 using SIKOPY.Models;
 
 namespace SIKOPY.ViewModels;
@@ -275,6 +277,9 @@ public class ShopWindowViewModel : ViewModelBase
     private readonly RelayCommand<CartItemViewModel> _removeCartItemCommand;
     private readonly RelayCommand _saveCartCommand;
     private readonly RelayCommand _clearStatusMessageCommand;
+    private readonly CommunityToolkit.Mvvm.Input.AsyncRelayCommand _checkoutCommand;
+    private readonly SalesRepository _sales = new();
+    private bool _isLoading;
 
     private string _searchQuery = string.Empty;
     private string _selectedSortOption = "Terbaru";
@@ -315,6 +320,7 @@ public class ShopWindowViewModel : ViewModelBase
         _removeCartItemCommand = new RelayCommand<CartItemViewModel>(RemoveCartItem, item => item is not null);
         _saveCartCommand = new RelayCommand(SaveCart);
         _clearStatusMessageCommand = new RelayCommand(() => StatusMessage = null);
+        _checkoutCommand = new CommunityToolkit.Mvvm.Input.AsyncRelayCommand(CheckoutAsync, () => HasCartItems);
 
         AllProducts = new ObservableCollection<ShopProductItem>();
         FilteredProducts = new ObservableCollection<ShopProductItem>();
@@ -445,6 +451,11 @@ public class ShopWindowViewModel : ViewModelBase
     public ICommand RemoveCartItemCommand => _removeCartItemCommand;
     public ICommand SaveCartCommand => _saveCartCommand;
     public ICommand ClearStatusMessageCommand => _clearStatusMessageCommand;
+    public ICommand CheckoutCommand => _checkoutCommand;
+
+    /// <summary>Diisi MainViewModel saat login; pembeli yang dicatat di penjualan.</summary>
+    public int? CurrentUserId { get; set; }
+    public string? CustomerName { get; set; }
 
     // -------------------------------------------------------------------------
     // Public Operations
@@ -481,6 +492,62 @@ public class ShopWindowViewModel : ViewModelBase
 
         RefreshFilteredProducts();
         NotifyCartStateChanged();
+    }
+
+    /// <summary>Muat produk yang dijual (aktif dan sudah ada harga) dari database.</summary>
+    public async Task LoadAsync()
+    {
+        if (_isLoading)
+            return;
+
+        _isLoading = true;
+        try
+        {
+            var products = await _sales.GetShopProductsAsync();
+            LoadProducts(products.Select(p => new ShopProductItem(p.Batch, p.Origin, p.PricePerGram)));
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Gagal memuat produk etalase: {DatabaseErrorMessage.Describe(ex)}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    /// <summary>Bayar isi keranjang: stok dan harga dicek ulang di database dalam satu transaksi.</summary>
+    public async Task CheckoutAsync()
+    {
+        if (CurrentUserId is not int userId)
+        {
+            StatusMessage = "Sesi login berakhir. Silakan masuk lagi.";
+            return;
+        }
+
+        var items = CartItems
+            .Where(item => item.SavedGram > 0m)
+            .Select(item => (item.ProductId, item.SavedGram))
+            .ToList();
+        if (items.Count == 0)
+            return;
+
+        var total = TotalCartPrice;
+        try
+        {
+            var invoice = await _sales.CheckoutAsync(userId, CustomerName, items);
+            CartItems.Clear();
+            _savedCartSnapshot = Array.Empty<CartItemSnapshot>();
+            PersistSnapshot(_savedCartSnapshot);
+            IsCartPopupVisible = false;
+            await LoadAsync();
+            StatusMessage = $"Pesanan {invoice} berhasil · Rp {total.ToString("N0", Indonesian)}.";
+        }
+        catch (Exception ex)
+        {
+            // Keranjang dibiarkan utuh supaya pembeli bisa menyesuaikan lalu coba lagi.
+            StatusMessage = $"Pembayaran gagal: {DatabaseErrorMessage.Describe(ex)}";
+        }
     }
 
     public void OpenCart()
@@ -832,6 +899,7 @@ public class ShopWindowViewModel : ViewModelBase
         _decreaseCartItemCommand.RaiseCanExecuteChanged();
         _removeCartItemCommand.RaiseCanExecuteChanged();
         _saveCartCommand.RaiseCanExecuteChanged();
+        _checkoutCommand.NotifyCanExecuteChanged();
     }
 
     private void ReconcileCartWithProducts()

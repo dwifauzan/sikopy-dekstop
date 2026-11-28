@@ -167,7 +167,7 @@
                         <TextBox Grid.Column="1"
                                  Classes="searchInput"
                                  Text="{Binding SearchQuery, Mode=TwoWay}"
-                                 Watermark="Cari produk roast bean..." />
+                                 PlaceholderText="Cari produk roast bean..." />
                     </Grid>
                 </Border>
 
@@ -596,33 +596,49 @@
                             CornerRadius="10"
                             Padding="14,11"
                             Margin="0,4,0,18">
-                        <TextBlock Text="Simpan keranjang untuk membuka kembali produk dan detailnya nanti. Pembelian tidak dilakukan di sini."
+                        <TextBlock Text="Simpan keranjang untuk melanjutkan nanti, atau Bayar untuk membuat pesanan. Stok dan harga dicek ulang saat bayar."
+                                   TextWrapping="Wrap"
                                    FontSize="12"
                                    Foreground="#6C7770" />
                     </Border>
 
                     <!-- Footer Modal: Ringkasan & Simpan Keranjang -->
-                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0"
-                                   Text="{Binding CartFooterSummaryText}"
-                                   FontSize="13"
-                                   FontWeight="Medium"
-                                   Foreground="#6C7770"
-                                   VerticalAlignment="Center" />
+                    <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CartFooterSummaryText}"
+                                       FontSize="13"
+                                       FontWeight="Medium"
+                                       Foreground="#6C7770" />
+                            <TextBlock Text="{Binding TotalCartPriceDisplay}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Foreground="#183B32" />
+                        </StackPanel>
+
+                        <Button Grid.Column="2"
+                                Classes="primaryAction"
+                                Command="{Binding CheckoutCommand}"
+                                Padding="18,11">
+                            <TextBlock Text="Bayar"
+                                       FontSize="13.5"
+                                       FontWeight="SemiBold"
+                                       Foreground="White" />
+                        </Button>
 
                         <Button Grid.Column="1"
-                                Classes="primaryAction"
+                                Classes="secondary"
+                                Height="NaN"
                                 Command="{Binding SaveCartCommand}"
                                 Padding="18,11">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <PathIcon Data="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"
                                           Width="15"
                                           Height="15"
-                                          Foreground="White" />
+                                          Foreground="#183B32" />
                                 <TextBlock Text="Simpan Keranjang"
                                            FontSize="13.5"
                                            FontWeight="SemiBold"
-                                           Foreground="White" />
+                                           Foreground="#183B32" />
                             </StackPanel>
                         </Button>
                     </Grid>
