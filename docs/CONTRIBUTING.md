@@ -40,8 +40,8 @@ chore: bump Avalonia to 12.1.5
 
 | Error | Cause | Fix |
 |---|---|---|
-| `XA0030: Building with JDK version 26... is not supported` | Wrong JDK | Use JDK 21 (see [Android](#android-any-os)) |
-| `XA5207: Could not find android.jar for API level 36` | Missing SDK platform | Run the `InstallAndroidDependencies` command above |
+| `XA0030: Building with JDK version 26... is not supported` | Wrong JDK | Use JDK 21 (see [Other platforms](../README.md#other-platforms)) |
+| `XA5207: Could not find android.jar for API level 36` | Missing SDK platform | Run the `InstallAndroidDependencies` command in [Other platforms](../README.md#other-platforms) |
 | `Could not find a valid Xcode developer path` | `xcode-select` points at the Command Line Tools | `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` |
 | `You have not agreed to the Xcode license agreements` | License not accepted | `sudo xcodebuild -license accept` |
 | `SupportedOSPlatformVersion ... lower than the minimum` | iOS min version too low for the SDK | Keep `SupportedOSPlatformVersion` in `SIKOPY.iOS.csproj` and `MinimumOSVersion` in `Info.plist` **equal** and ≥ 15.0 |

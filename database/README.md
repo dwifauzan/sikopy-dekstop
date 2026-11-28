@@ -1,200 +1,95 @@
 # Database
 
-SIKOPY uses PostgreSQL locally. The database schema is stored in numbered SQL
-migrations so every team member can recreate the same database structure.
+SIKOPY stores everything in PostgreSQL (version 13 or newer). This page covers:
+- setting up a new database
+- updating one you already have
+- connecting the app to it
+- fixing common problems
 
-## Fresh database with pgAdmin
+The examples use the database name **`sikopy`**. PostgreSQL treats `Sikopy` and
+`sikopy` as **different databases**, so use the same name everywhere. That includes
+your `database.local.json`.
 
-### 1. Create the database
+---
 
-1. Open **pgAdmin** and connect to your local PostgreSQL server.
-2. In the left panel, right-click **Databases** and select **Create >
-   Database...**.
-3. Set **Database** to `sikopy`, leave the owner as your PostgreSQL user, then
-   click **Save**.
+## Contents
 
-### 2. Open the Query Tool
+1. [New database](#new-database)
+2. [Updating an existing database](#updating-an-existing-database)
+3. [Connecting the app](#connecting-the-app)
+4. [First admin account](#first-admin-account)
+5. [Tables](#tables)
+6. [Changing the schema](#changing-the-schema)
+7. [Troubleshooting](#troubleshooting)
 
-1. Expand **Databases** and select the `sikopy` database.
-2. Right-click `sikopy` and choose **Query Tool**.
-3. Open `database/schema.sql` from this repository:
-   - Select **File > Open File** in Query Tool, or
-   - Copy the contents of the file into the query editor.
+---
 
-### 3. Run the schema
+## New database
 
-Click the **Execute/Play** button or press `F5`.
+`database/schema.sql` always holds the **complete, current** schema, including every
+migration. On a new, empty database you only run this one file.
 
-`database/schema.sql` is standalone and does not use `\ir`, so it can also be
-opened and executed directly in TablePlus.
-
-### TablePlus
-
-1. Connect to the PostgreSQL server.
-2. Select the `sikopy` database.
-3. Open `database/schema.sql` in a new SQL query.
-4. Run the complete file.
-
-Use `database/migrations/001_initial_schema.sql` for the same initial schema
-when working with the migration workflow.
-
-### If you see `current transaction is aborted`
-
-PostgreSQL stops executing statements after the first error inside a
-transaction. The message shown is usually a follow-up error; inspect the first
-error in the output.
-
-For a fresh import, the most common cause is that some tables already exist.
-Drop and recreate the empty local `sikopy` database, then run
-`database/schema.sql` again. Do not drop a database containing data you need.
-
-### 4. Verify the tables
-
-In the left panel, right-click the `sikopy` database and choose **Refresh**.
-Expand:
-
-```text
-sikopy
-└── Schemas
-    └── public
-        └── Tables
-```
-
-You should see these nine tables:
-
-```text
-jenis_biji_kopi_mentah
-metode_proses
-pengguna
-biji_kopi_mentah
-batch_roasting
-biji_kopi_roasted
-riwayat_stok
-penjualan
-detail_penjualan
-```
-
-You can also verify from Query Tool:
-
-```sql
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-ORDER BY table_name;
-```
-
-## Fresh database with the command line
-
-Create a local database, then import the complete schema:
-
-```sql
-CREATE DATABASE sikopy;
-```
+### Command line
 
 ```bash
+createdb -U postgres sikopy
 psql -U postgres -d sikopy -f database/schema.sql
 ```
 
-Alternatively, run the initial migration directly:
+### pgAdmin
+
+1. Right-click **Databases → Create → Database…**, name it `sikopy`, then **Save**.
+2. Right-click `sikopy` and choose **Query Tool**.
+3. **File → Open File**, then choose `database/schema.sql`.
+4. Press **F5** to run it.
+5. Right-click `sikopy` and choose **Refresh**. You should see 9 tables under
+   **Schemas → public → Tables**.
+
+### TablePlus
+
+Connect, select the `sikopy` database, open `database/schema.sql` in a new query, and run the whole file.
+
+---
+
+## Updating an existing database
+
+If your database was created earlier, **don't run `schema.sql` again**, because the
+tables already exist. Run only the migrations you don't have yet, in number order:
+
+| Migration | Adds | You need it if… |
+|---|---|---|
+| `001_initial_schema.sql` | All tables | Never; `schema.sql` already covers it |
+| `002_raw_material_constraints.sql` | Stock/price can't be negative; history rows must be valid | Bahan Baku shows constraint errors |
+| `003_user_active_flag.sql` | `pengguna.is_aktif`, used to deactivate accounts | Login fails with "Struktur database belum sesuai" |
 
 ```bash
-psql -U postgres -d sikopy -f database/migrations/001_initial_schema.sql
+psql -U postgres -d sikopy -f database/migrations/003_user_active_flag.sql
 ```
 
-## Reset a local development database
-
-Only do this if the database contains no data that needs to be kept. In pgAdmin,
-right-click the `sikopy` database, choose **Delete/Drop**, recreate it, and run
-the import steps again. Dropping the database permanently deletes its data.
-
-## Schema changes
-
-- Add a new numbered file under `database/migrations/` for every schema change.
-- Never edit a migration that another developer may already have applied.
-- Apply migrations in numeric order.
-- Keep seed/development data separate from schema migrations.
-
-The schema currently defines master data, raw coffee beans, roasting batches,
-roasted products, stock history, sales, and sales details.
-
-## Raw material feature
-
-The application provides a **Bahan Baku** (raw materials) screen for production
-employees. It can:
-
-- list active green beans with origin, type, process, grade, altitude, stock,
-  price per kg and harvest month (10 per page);
-- search by name or origin, and filter by type, process or low stock
-  (below 50 kg, shown in red);
-- add a green bean (with an optional initial stock) and edit its details;
-- add incoming stock in kilograms from the row's **⋯** menu;
-- deactivate a green bean (`is_aktif = FALSE`), which keeps its history;
-- permanently delete a green bean (**⋯ → Hapus permanen**). Its `riwayat_stok`
-  rows are deleted in the same transaction. Deleting is refused while any
-  `batch_roasting` row uses the bean; deactivate it instead;
-- show the 10 most recent stock movements.
-
-Every stock increase, including the initial stock, is written to `riwayat_stok`
-in the same PostgreSQL transaction as the stock update. Editing a green bean
-never changes its stock directly.
-
-Number fields (**Ketinggian**, **Harga per kg**, **Stok awal**, **Jumlah
-masuk**) only accept digits, plus `.` and `,` for price and stock; letters are
-blocked when typed and removed when pasted. **Tanggal panen** accepts digits
-and `/` only and is entered as `dd/mm/yyyy` (or picked from the calendar).
-
-In the add/edit form, **Jenis** and **Proses** can be picked from the list or
-typed. A name that does not exist yet (compared ignoring case) is inserted into
-`jenis_biji_kopi_mentah` or `metode_proses` in the same transaction as the
-green bean, so an empty database needs no seed data.
-
-Before running the application, apply the current schema. For an existing
-database, run this migration once:
-
-```text
-database/migrations/002_raw_material_constraints.sql
-```
-
-For a new database, `database/schema.sql` already includes these constraints.
-
-## Users and roles
-
-Roles are `Pelanggan` (customer), `Staf` and `Admin`. Accounts created from
-the app's **Daftar** page are `Pelanggan` and only see the Etalase. `Staf` and
-`Admin` see every staff screen; only `Admin` sees **Pengguna**, where accounts
-can get a new role, a new random password, or be deactivated
-(`is_aktif = FALSE`, login refused). The last active admin cannot be demoted
-or deactivated.
-
-To create the first admin, register in the app, then promote the account:
+How to check what your database already has:
 
 ```sql
-UPDATE pengguna SET peran = 'Admin' WHERE nama_pengguna = 'your_username';
+-- 002 is applied if this returns 4 rows
+SELECT conname FROM pg_constraint WHERE conname LIKE 'ck_%';
+
+-- 003 is applied if this returns 1 row
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'pengguna' AND column_name = 'is_aktif';
 ```
 
-There is no self-service password reset; ask an admin.
+> When you pull and see a new file in `database/migrations/`, run it before you
+> start the app.
 
-For an existing database, run this migration once (it adds `pengguna.is_aktif`):
+---
 
-```text
-database/migrations/003_user_active_flag.sql
-```
+## Connecting the app
 
-## Connecting the application
+The app looks for the connection string in this order:
 
-The application uses the `Npgsql` package. It looks for the PostgreSQL
-connection string in this order:
-
-1. the `SIKOPY_DATABASE_CONNECTION_STRING` environment variable;
+1. the environment variable `SIKOPY_DATABASE_CONNECTION_STRING`;
 2. the file `SIKOPY.Desktop/database.local.json`.
 
-The file is the easiest option: set it up once and it works with
-`dotnet run`, Rider and Visual Studio. It is listed in `.gitignore`, so your
-password is never committed.
-
-### Recommended: local settings file
-
-Copy the example file and fill in your own values:
+### Recommended: the local file
 
 ```bash
 cp SIKOPY.Desktop/database.local.example.json SIKOPY.Desktop/database.local.json
@@ -202,69 +97,92 @@ cp SIKOPY.Desktop/database.local.example.json SIKOPY.Desktop/database.local.json
 
 ```json
 {
-  "ConnectionString": "Host=localhost;Port=5432;Database=Sikopy;Username=postgres;Password=your_password"
+  "ConnectionString": "Host=localhost;Port=5432;Database=sikopy;Username=postgres;Password=your_password"
 }
 ```
 
-- `Database` must match your database name exactly; PostgreSQL treats
-  `Sikopy` and `sikopy` as different databases.
-- Leave out `Password=...` if your local server does not ask for one.
-
-Then run the app normally:
-
-```bash
-dotnet run --project SIKOPY.Desktop
-```
-
-The file is copied next to the app when it builds. After editing it, run or
-build again.
+- Leave out `Password=...` if your local server doesn't ask for one.
+- The file is in `.gitignore`, so your password is never committed.
+- It is copied next to the app at build time. After you edit it, run or build again.
 
 ### Alternative: environment variable
 
-The environment variable takes priority over the file. It only applies to the
-terminal (or IDE run configuration) where it is set.
-
-macOS/Linux:
+This overrides the file, but only in the terminal or IDE run configuration where you set it.
 
 ```bash
-export SIKOPY_DATABASE_CONNECTION_STRING='Host=localhost;Port=5432;Database=Sikopy;Username=postgres;Password=your_password'
-dotnet run --project SIKOPY.Desktop
+# macOS / Linux
+export SIKOPY_DATABASE_CONNECTION_STRING='Host=localhost;Port=5432;Database=sikopy;Username=postgres;Password=your_password'
 ```
-
-Windows PowerShell:
 
 ```powershell
-$env:SIKOPY_DATABASE_CONNECTION_STRING = "Host=localhost;Port=5432;Database=Sikopy;Username=postgres;Password=your_password"
-dotnet run --project SIKOPY.Desktop
+# Windows PowerShell
+$env:SIKOPY_DATABASE_CONNECTION_STRING = "Host=localhost;Port=5432;Database=sikopy;Username=postgres;Password=your_password"
 ```
 
-In Rider, add the variable under **Run → Edit Configurations… →
-SIKOPY.Desktop → Environment variables**.
+In Rider, add it under **Run → Edit Configurations… → SIKOPY.Desktop → Environment variables**.
 
-If neither is set, the app shows "Koneksi database belum diatur".
+---
 
-The shared connection code is in `SIKOPY/Database/`:
+## First admin account
 
-- `PostgresConnectionFactory.OpenAsync()` opens and returns an
-  `NpgsqlConnection`.
-- `PostgresHealthCheck.CanConnectAsync()` runs `SELECT 1` to verify the
-  connection.
+New accounts made on the **Daftar** page get the role `Pelanggan` (customer).
+To get the first admin, register in the app, then run:
 
-Example from a ViewModel or service:
-
-```csharp
-await using var connection =
-    await PostgresConnectionFactory.OpenAsync(cancellationToken);
-
-await using var command = connection.CreateCommand();
-command.CommandText = "SELECT nama FROM jenis_biji_kopi_mentah ORDER BY nama;";
-
-await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-while (await reader.ReadAsync(cancellationToken))
-{
-    var nama = reader.GetString(0);
-    // Use nama in the application.
-}
+```sql
+UPDATE pengguna SET peran = 'Admin' WHERE nama_pengguna = 'your_username';
 ```
 
-Do not commit real passwords, connection strings, or environment files.
+After that, manage everyone else from the **Pengguna** page in the app:
+change roles, reset passwords, deactivate accounts. The roles are `Pelanggan`,
+`Staf` and `Admin`.
+
+Locked out, for example because the only admin forgot their password? Make another
+account an admin with the SQL above, then reset the password from **Pengguna**.
+
+---
+
+## Tables
+
+| Table | Holds |
+|---|---|
+| `pengguna` | Accounts: username, password hash, name, role (`peran`), `is_aktif` |
+| `jenis_biji_kopi_mentah` | Green bean types (filled automatically from the form) |
+| `metode_proses` | Processing methods (filled automatically from the form) |
+| `biji_kopi_mentah` | Green beans: origin, stock in **kg**, price per kg |
+| `batch_roasting` | Roasting batches: green bean used (**g**), result (**g**), level, date |
+| `biji_kopi_roasted` | Roast bean products, one per batch: stock in **g**, `harga_per_gram` |
+| `riwayat_stok` | Every stock movement (MASUK/KELUAR). `referensi` = batch code or invoice number |
+| `penjualan` | Sales: invoice number, buyer, total |
+| `detail_penjualan` | Sale lines: product, grams, price per gram, subtotal |
+
+Nothing that has history is hard-deleted. Batches, products and accounts are hidden
+with `is_aktif = FALSE` instead. The one exception is **Hapus permanen** on a green
+bean, which is only allowed when no batch has used it.
+
+---
+
+## Changing the schema
+
+1. Add a new numbered file: `database/migrations/004_short_name.sql`. Wrap it in
+   `BEGIN; … COMMIT;`, and use `IF NOT EXISTS` where you can, so it is safe to run twice.
+2. Make the same change in `database/schema.sql`, so new databases get it too.
+3. Add a row to the table in [Updating an existing database](#updating-an-existing-database).
+4. Say in your PR that teammates must run the migration.
+
+Never edit a migration that is already merged. Write a new one instead.
+
+---
+
+## Troubleshooting
+
+| Message | Fix |
+|---|---|
+| "Koneksi database belum diatur" | Create `SIKOPY.Desktop/database.local.json` ([Connecting the app](#connecting-the-app)) |
+| "Database tidak ditemukan" | The name in your connection string doesn't match. Check `sikopy` vs `Sikopy` |
+| "Login ke database gagal" | Wrong username or password in the connection string |
+| "Struktur database belum sesuai" | A migration is missing. See [Updating an existing database](#updating-an-existing-database) |
+| "Tidak dapat terhubung ke database" | PostgreSQL isn't running, or the host/port is wrong |
+| `current transaction is aborted` while importing | Only the **first** error matters. Usually the tables already exist. On an empty dev database, drop it, recreate it, and import again |
+
+To reset a local dev database, drop it in pgAdmin (**Delete/Drop**), create it again,
+and run `schema.sql`. **This deletes all its data.**
