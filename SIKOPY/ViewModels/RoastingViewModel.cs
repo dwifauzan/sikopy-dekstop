@@ -59,6 +59,20 @@ public partial class RoastingViewModel : ViewModelBase
     [ObservableProperty] public partial string Notes { get; set; } = string.Empty;
     [ObservableProperty] public partial string FormError { get; set; } = string.Empty;
 
+    // ---------- Detail ----------
+    [ObservableProperty] public partial RoastingBatch? DetailBatch { get; set; }
+    [ObservableProperty] public partial RoastingBatchDetail? Detail { get; set; }
+    [ObservableProperty] public partial string DetailError { get; set; } = string.Empty;
+    public bool IsDetailOpen => DetailBatch is not null;
+
+    // ---------- Hapus ----------
+    [ObservableProperty] public partial RoastingBatch? DeletionTarget { get; set; }
+    [ObservableProperty] public partial string DeleteError { get; set; } = string.Empty;
+    public bool IsDeleteDialogOpen => DeletionTarget is not null;
+
+    partial void OnDetailBatchChanged(RoastingBatch? value) => OnPropertyChanged(nameof(IsDetailOpen));
+    partial void OnDeletionTargetChanged(RoastingBatch? value) => OnPropertyChanged(nameof(IsDeleteDialogOpen));
+
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnSelectedLevelFilterChanged(string value) => ApplyFilter();
     partial void OnGreenBeanUsedKgChanged(string value) => FormError = string.Empty;
@@ -279,6 +293,63 @@ public partial class RoastingViewModel : ViewModelBase
         catch (Exception exception)
         {
             FormError = $"Gagal menyimpan: {DatabaseErrorMessage.Describe(exception)}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenDetailAsync(RoastingBatch? batch)
+    {
+        if (batch is null)
+            return;
+
+        Detail = null;
+        DetailError = string.Empty;
+        DetailBatch = batch;
+        try
+        {
+            Detail = await _roasting.GetDetailAsync(batch.Id);
+        }
+        catch (Exception exception)
+        {
+            DetailError = $"Gagal memuat detail: {DatabaseErrorMessage.Describe(exception)}";
+        }
+    }
+
+    [RelayCommand]
+    private void CloseDetail() => DetailBatch = null;
+
+    [RelayCommand]
+    private void RequestDelete(RoastingBatch? batch)
+    {
+        DeleteError = string.Empty;
+        DeletionTarget = batch;
+    }
+
+    [RelayCommand]
+    private void CancelDelete() => DeletionTarget = null;
+
+    [RelayCommand]
+    private async Task ConfirmDeleteAsync()
+    {
+        if (DeletionTarget is not { } batch || _isSaving)
+            return;
+
+        _isSaving = true;
+        try
+        {
+            await _roasting.DeactivateAsync(batch.Id);
+            DeletionTarget = null;
+            StatusMessage = $"Batch {batch.Code} dihapus. Stok green bean dikembalikan.";
+            await LoadAsync();
+        }
+        catch (Exception exception)
+        {
+            // Dialog tetap terbuka supaya alasannya terbaca
+            DeleteError = $"Gagal menghapus: {DatabaseErrorMessage.Describe(exception)}";
         }
         finally
         {

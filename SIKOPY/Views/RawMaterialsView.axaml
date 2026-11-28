@@ -441,6 +441,56 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ===== Roast bean ===== -->
+                <Grid ColumnDefinitions="*,Auto" Height="30" Margin="0,8,0,0">
+                    <TextBlock Classes="sectionTitle" Text="Roast Bean" />
+                    <TextBlock Grid.Column="1" Classes="muted"
+                               Text="Dibuat otomatis dari Batch Roasting" />
+                </Grid>
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="tableHead">
+                            <Grid ColumnDefinitions="3*,2*,130,200,Auto">
+                                <TextBlock Grid.Column="0" Classes="tableHeader" Text="PRODUK" />
+                                <TextBlock Grid.Column="1" Classes="tableHeader" Text="BATCH" />
+                                <TextBlock Grid.Column="2" Classes="tableHeader" Text="STOK" />
+                                <TextBlock Grid.Column="3" Classes="tableHeader" Text="HARGA JUAL" />
+                                <TextBlock Grid.Column="4" Classes="tableHeader" Text="AKSI" Width="70" />
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding RoastedBeans}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:RoastedBean">
+                                    <Border Classes="tableRow compact">
+                                        <Grid ColumnDefinitions="3*,2*,130,200,Auto">
+                                            <TextBlock Grid.Column="0" Classes="cell name"
+                                                       Text="{Binding Name}" ToolTip.Tip="{Binding Name}" />
+                                            <TextBlock Grid.Column="1" Classes="cell" Text="{Binding BatchCode}" />
+                                            <TextBlock Grid.Column="2" Classes="cell stock" Text="{Binding StockDisplay}" />
+                                            <TextBlock Grid.Column="3" Classes="cell"
+                                                       Classes.stock="{Binding !HasPrice}"
+                                                       Classes.low="{Binding !HasPrice}"
+                                                       Text="{Binding PriceDisplay}" />
+                                            <Button Grid.Column="4" Classes="iconAction" Width="70"
+                                                    ToolTip.Tip="Atur harga jual"
+                                                    Command="{Binding $parent[ItemsControl].((vm:RawMaterialsViewModel)DataContext).OpenPriceDialogCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="{StaticResource IconPencil}" Width="14" Height="14" />
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Margin="16,20" Text="Belum ada roast bean. Tambahkan batch di menu Batch Roasting."
+                                   Foreground="#718279" FontSize="13"
+                                   IsVisible="{Binding !HasRoastedBeans}" />
+                    </StackPanel>
+                </Border>
+
                 <!-- ===== Stock history ===== -->
                 <Grid ColumnDefinitions="*,Auto" Height="30" Margin="0,8,0,0">
                     <TextBlock Classes="sectionTitle" Text="Riwayat Stok Terbaru" />
@@ -679,6 +729,43 @@
                     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
                         <Button Classes="secondary" Content="Batal" Command="{Binding CancelStockCommand}" />
                         <Button Classes="primary" Content="Simpan stok" Command="{Binding SaveStockCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
+        <!-- ===== Roast bean price dialog ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsPriceDialogOpen}">
+            <Border Classes="dialog" Width="460">
+                <StackPanel Spacing="18" Margin="26,24">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="dialogTitle" Text="Harga Jual Roast Bean" />
+                        <TextBlock Classes="muted" FontSize="13" TextWrapping="Wrap">
+                            <Run Text="{Binding PriceTarget.Name}" FontWeight="SemiBold" Foreground="#183B32" />
+                            <Run Text="{Binding PriceTarget.StockDisplay, StringFormat=' · stok {0}'}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="fieldLabel" Text="Harga per kg *" />
+                        <TextBox Classes="field" Text="{Binding PriceInput}"
+                                 behaviors:InputBehaviors.AllowedCharacters="0123456789.,"
+                                 MaxLength="17" PlaceholderText="mis. 350.000">
+                            <TextBox.InnerLeftContent>
+                                <TextBlock Classes="unit" Text="Rp" />
+                            </TextBox.InnerLeftContent>
+                            <TextBox.InnerRightContent>
+                                <TextBlock Classes="unit" Text="/ kg" />
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+                    </StackPanel>
+
+                    <TextBlock Classes="formError" Text="{Binding PriceError}"
+                               IsVisible="{Binding PriceError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Classes="secondary" Content="Batal" Command="{Binding CancelPriceCommand}" />
+                        <Button Classes="primary" Content="Simpan harga" Command="{Binding SavePriceCommand}" />
                     </StackPanel>
                 </StackPanel>
             </Border>

@@ -25,6 +25,7 @@ public partial class RawMaterialsViewModel : ViewModelBase
     private static readonly CultureInfo Indonesian = CultureInfo.GetCultureInfo("id-ID");
 
     private readonly RawMaterialRepository _repository = new();
+    private readonly RoastingRepository _roasting = new();
     private readonly List<RawMaterial> _materials = new();
     private List<RawMaterial> _filteredMaterials = new();
     private int? _editingMaterialId;
@@ -39,6 +40,7 @@ public partial class RawMaterialsViewModel : ViewModelBase
     public ObservableCollection<RawMaterialRowViewModel> PageRows { get; } = new();
     public ObservableCollection<PageItem> Pages { get; } = new();
     public ObservableCollection<StockHistoryEntry> StockHistory { get; } = new();
+    public ObservableCollection<RoastedBean> RoastedBeans { get; } = new();
     public ObservableCollection<LookupItem> Types { get; } = new();
     public ObservableCollection<LookupItem> ProcessingMethods { get; } = new();
     public ObservableCollection<LookupItem> TypeFilterOptions { get; } = new() { AllTypes };
@@ -57,6 +59,7 @@ public partial class RawMaterialsViewModel : ViewModelBase
     [ObservableProperty] public partial bool HasNoResults { get; set; }
     [ObservableProperty] public partial string EmptyMessage { get; set; } = string.Empty;
     [ObservableProperty] public partial bool HasHistory { get; set; }
+    [ObservableProperty] public partial bool HasRoastedBeans { get; set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand), nameof(NextPageCommand))]
@@ -100,6 +103,13 @@ public partial class RawMaterialsViewModel : ViewModelBase
     [ObservableProperty] public partial string StockError { get; set; } = string.Empty;
     public bool IsStockDialogOpen => StockTarget is not null;
 
+    // ---------- Roast bean price dialog ----------
+
+    [ObservableProperty] public partial RoastedBean? PriceTarget { get; set; }
+    [ObservableProperty] public partial string PriceInput { get; set; } = string.Empty;
+    [ObservableProperty] public partial string PriceError { get; set; } = string.Empty;
+    public bool IsPriceDialogOpen => PriceTarget is not null;
+
     // ---------- Deactivate confirmation ----------
 
     [ObservableProperty] public partial RawMaterial? DeactivationTarget { get; set; }
@@ -113,6 +123,8 @@ public partial class RawMaterialsViewModel : ViewModelBase
 
     partial void OnStatusMessageChanged(string value) => OnPropertyChanged(nameof(HasStatus));
     partial void OnStockTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsStockDialogOpen));
+    partial void OnPriceTargetChanged(RoastedBean? value) => OnPropertyChanged(nameof(IsPriceDialogOpen));
+    partial void OnPriceInputChanged(string value) => PriceError = string.Empty;
     partial void OnDeactivationTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsDeactivateDialogOpen));
     partial void OnDeletionTargetChanged(RawMaterial? value) => OnPropertyChanged(nameof(IsDeleteDialogOpen));
 
@@ -146,6 +158,7 @@ public partial class RawMaterialsViewModel : ViewModelBase
             var methods = await _repository.GetProcessingMethodsAsync(cancellationToken);
             var materials = await _repository.GetActiveAsync(cancellationToken);
             var history = await _repository.GetHistoryAsync(HistoryLimit, cancellationToken);
+            var roastedBeans = await _roasting.GetRoastedBeansAsync(cancellationToken);
 
             ReplaceLookups(types, methods);
             SyncFormLookupSelections();
@@ -160,6 +173,11 @@ public partial class RawMaterialsViewModel : ViewModelBase
             foreach (var entry in history)
                 StockHistory.Add(entry);
             HasHistory = StockHistory.Count > 0;
+
+            RoastedBeans.Clear();
+            foreach (var bean in roastedBeans)
+                RoastedBeans.Add(bean);
+            HasRoastedBeans = RoastedBeans.Count > 0;
         }
         catch (Exception exception)
         {
@@ -404,6 +422,50 @@ public partial class RawMaterialsViewModel : ViewModelBase
         catch (Exception exception)
         {
             StockError = $"Gagal menambah stok: {DatabaseErrorMessage.Describe(exception)}";
+        }
+    }
+
+    // ---------- Roast bean price ----------
+
+    [RelayCommand]
+    private void OpenPriceDialog(RoastedBean? bean)
+    {
+        if (bean is null)
+            return;
+
+        PriceInput = bean.HasPrice ? bean.PricePerKilogram.ToString("N0", Indonesian) : string.Empty;
+        PriceError = string.Empty;
+        PriceTarget = bean;
+    }
+
+    [RelayCommand]
+    private void CancelPrice() => PriceTarget = null;
+
+    [RelayCommand]
+    private async Task SavePriceAsync(CancellationToken cancellationToken = default)
+    {
+        if (PriceTarget is not { } bean)
+            return;
+
+        if (!NumberInput.TryParseRupiah(PriceInput, out var pricePerKilogram) ||
+            pricePerKilogram <= 0 ||
+            pricePerKilogram > MaxPricePerKilogram)
+        {
+            PriceError = "Harga per kg wajib diisi dengan angka lebih dari nol, contoh: 350.000.";
+            return;
+        }
+
+        try
+        {
+            // shortcut: stored per gram with 2 decimals (DB column), so per-kg prices round to Rp 10; fine for Rupiah.
+            await _roasting.UpdateRoastedPriceAsync(bean.Id, pricePerKilogram / 1000m, cancellationToken);
+            PriceTarget = null;
+            ShowSuccess($"Harga {bean.Name} diperbarui.");
+            await LoadAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            PriceError = $"Gagal menyimpan harga: {DatabaseErrorMessage.Describe(exception)}";
         }
     }
 

@@ -170,7 +170,7 @@
                   </StackPanel>
 
                   <!-- Tombol aksi -->
-                  <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="8">
                     <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                             Background="#E3F0E6" Foreground="#183B32"
                             Command="{Binding $parent[ItemsControl].((vm:RoastingViewModel)DataContext).EditBatchCommand}"
@@ -181,8 +181,16 @@
                       </StackPanel>
                     </Button>
                     <Button Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Background="White" BorderBrush="#E1E5E2" BorderThickness="1" Foreground="#183B32">
+                            Background="White" BorderBrush="#E1E5E2" BorderThickness="1" Foreground="#183B32"
+                            Command="{Binding $parent[ItemsControl].((vm:RoastingViewModel)DataContext).OpenDetailCommand}"
+                            CommandParameter="{Binding}">
                       <TextBlock Text="Detail batch ↗" FontSize="12" />
+                    </Button>
+                    <Button Grid.Column="2" Background="White" BorderBrush="#F5D0CE" BorderThickness="1"
+                            Foreground="#C63D34" ToolTip.Tip="Hapus batch"
+                            Command="{Binding $parent[ItemsControl].((vm:RoastingViewModel)DataContext).RequestDeleteCommand}"
+                            CommandParameter="{Binding}">
+                      <TextBlock Text="Hapus" FontSize="12" />
                     </Button>
                   </Grid>
 
@@ -294,6 +302,109 @@
           </Grid>
 
         </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ================= OVERLAY DETAIL BATCH ================= -->
+    <Grid IsVisible="{Binding IsDetailOpen}" Background="#99000000">
+      <Border Width="640" MaxHeight="680" Background="White" CornerRadius="16"
+              HorizontalAlignment="Center" VerticalAlignment="Center"
+              BoxShadow="0 10 40 0 #40000000">
+        <Grid RowDefinitions="Auto,*,Auto">
+          <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="24,20">
+            <StackPanel Spacing="2">
+              <TextBlock Text="{Binding DetailBatch.Code}" FontSize="20" FontWeight="Bold" Foreground="#183B32" />
+              <TextBlock Foreground="#718279" FontSize="13">
+                <Run Text="{Binding DetailBatch.MaterialName}" />
+                <Run Text="{Binding DetailBatch.LevelDisplay, StringFormat=' · {0}'}" />
+                <Run Text="{Binding DetailBatch.DateDisplay, StringFormat=' · {0}'}" />
+              </TextBlock>
+            </StackPanel>
+            <Button Grid.Column="1" Content="✕" Background="Transparent"
+                    Command="{Binding CloseDetailCommand}" />
+          </Grid>
+
+          <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="24,8" Spacing="16">
+              <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="GREEN BEAN DIPAKAI" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding DetailBatch.UsedDisplay}" FontWeight="Bold" Foreground="#183B32" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="HASIL ROAST" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding DetailBatch.RoastedDisplay}" FontWeight="Bold" Foreground="#183B32" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                  <TextBlock Text="SUSUT" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding DetailBatch.LossDisplay}" FontWeight="Bold" Foreground="#C0392B" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Spacing="2">
+                  <TextBlock Text="SISA ROAST BEAN" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding Detail.ProductStockDisplay, FallbackValue='-'}" FontWeight="Bold" Foreground="#183B32" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="2">
+                  <TextBlock Text="HARGA JUAL" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding Detail.ProductPriceDisplay, FallbackValue='-'}" FontWeight="Bold" Foreground="#183B32" />
+                </StackPanel>
+                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="2">
+                  <TextBlock Text="DIBUAT OLEH" FontSize="10" Foreground="#718279" />
+                  <TextBlock Text="{Binding Detail.CreatedBy, FallbackValue='-'}" FontWeight="Bold" Foreground="#183B32" />
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="4">
+                <TextBlock Text="CATATAN RASA" FontSize="10" Foreground="#718279" />
+                <TextBlock Text="{Binding DetailBatch.NotesDisplay}" Foreground="#183B32" TextWrapping="Wrap" />
+              </StackPanel>
+
+              <StackPanel Spacing="6">
+                <TextBlock Text="RIWAYAT STOK BATCH INI" FontSize="10" Foreground="#718279" />
+                <ItemsControl ItemsSource="{Binding Detail.History, FallbackValue={x:Null}}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:StockHistoryEntry">
+                      <Grid ColumnDefinitions="150,*,80,100" Margin="0,4">
+                        <TextBlock Text="{Binding OccurredAtDisplay}" FontSize="12" Foreground="#718279" />
+                        <TextBlock Grid.Column="1" Text="{Binding MaterialName}" FontSize="12" Foreground="#183B32"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="2" Text="{Binding Direction}" FontSize="12" Foreground="#718279" />
+                        <TextBlock Grid.Column="3" Text="{Binding QuantityDisplay}" FontSize="12"
+                                   FontWeight="SemiBold" Foreground="#183B32" HorizontalAlignment="Right" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <TextBlock Text="{Binding DetailError}" Foreground="Red" TextWrapping="Wrap"
+                         IsVisible="{Binding DetailError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+          </ScrollViewer>
+
+          <Button Grid.Row="2" Content="Tutup" HorizontalAlignment="Right" Margin="24,16"
+                  Command="{Binding CloseDetailCommand}" />
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ================= OVERLAY KONFIRMASI HAPUS ================= -->
+    <Grid IsVisible="{Binding IsDeleteDialogOpen}" Background="#99000000">
+      <Border Width="460" Background="White" CornerRadius="16" Padding="26,24"
+              HorizontalAlignment="Center" VerticalAlignment="Center"
+              BoxShadow="0 10 40 0 #40000000">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Hapus batch?" FontSize="20" FontWeight="Bold" Foreground="#183B32" />
+          <TextBlock FontSize="13" Foreground="#475C50" TextWrapping="Wrap">
+            <Run Text="{Binding DeletionTarget.Code}" FontWeight="SemiBold" />
+            <Run Text="akan dihapus. Green bean yang dipakai dikembalikan ke stok dan roast bean dari batch ini dikeluarkan. Riwayat stok tetap tersimpan." />
+          </TextBlock>
+          <TextBlock Text="{Binding DeleteError}" Foreground="Red" TextWrapping="Wrap"
+                     IsVisible="{Binding DeleteError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Classes="secondary" Content="Batal" Command="{Binding CancelDeleteCommand}" />
+            <Button Classes="danger" Content="Hapus batch" Command="{Binding ConfirmDeleteCommand}" />
+          </StackPanel>
+        </StackPanel>
       </Border>
     </Grid>
 
