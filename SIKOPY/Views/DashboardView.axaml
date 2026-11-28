@@ -1,0 +1,216 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             mc:Ignorable="d" d:DesignWidth="1192" d:DesignHeight="900"
+             x:Class="SIKOPY.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel"
+             Background="#F4F1EB">
+    <Design.DataContext>
+        <vm:DashboardViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DFE6DF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.tableHead">
+            <Setter Property="Background" Value="#F7F9F6" />
+            <Setter Property="BorderBrush" Value="#E3E9E2" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="50" />
+        </Style>
+        <Style Selector="Border.tableRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#EDF1EB" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="52" />
+        </Style>
+        <Style Selector="Border.tableRow:pointerover">
+            <Setter Property="Background" Value="#F9FBF8" />
+        </Style>
+        <Style Selector="TextBlock.cell">
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#475C50" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.cell.name">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.cell.stock">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge TextBlock">
+            <Setter Property="Foreground" Value="#2D614E" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.badge.outgoing">
+            <Setter Property="Background" Value="#FBEAE8" />
+        </Style>
+        <Style Selector="Border.badge.outgoing TextBlock">
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+        <Style Selector="Border.status">
+            <Setter Property="Background" Value="#FBEAE8" />
+            <Setter Property="BorderBrush" Value="#F2C9C5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+        <Style Selector="Border.tile">
+            <Setter Property="Padding" Value="20,18" />
+            <Setter Property="Margin" Value="0,0,16,16" />
+            <Setter Property="Width" Value="340" />
+        </Style>
+        <Style Selector="TextBlock.tileLabel">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.tileValue">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="40,38" Spacing="20">
+            <Grid ColumnDefinitions="*,Auto" MinHeight="72">
+                <StackPanel Spacing="6" VerticalAlignment="Center">
+                    <TextBlock Text="Dashboard" Foreground="#183B32" FontSize="30" FontWeight="Bold" />
+                    <TextBlock Text="Ringkasan stok, produksi, dan penjualan" Foreground="#718279" FontSize="14" />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="secondary" Content="Muat ulang"
+                        VerticalAlignment="Center" Command="{Binding LoadCommand}" />
+            </Grid>
+
+            <Border Classes="status" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#A8322A" FontSize="13" TextWrapping="Wrap" />
+            </Border>
+
+            <WrapPanel Margin="0,0,-16,-16">
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="STOK GREEN BEAN" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.GreenBeanDisplay}" />
+                        <TextBlock Classes="muted" Text="{Binding Stats.GreenBeanCaption}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="STOK ROAST BEAN" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.RoastedDisplay}" />
+                        <TextBlock Classes="muted" Text="{Binding Stats.RoastedCaption}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="BATCH MINGGU INI" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.WeekBatchDisplay}" />
+                        <TextBlock Classes="muted" Text="{Binding Stats.WeekBatchCaption}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="SUSUT RATA-RATA" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.WeekShrinkageDisplay}" />
+                        <TextBlock Classes="muted" Text="Batch minggu ini (berat hilang saat roasting)" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="PENJUALAN HARI INI" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.TodaySalesDisplay}" />
+                        <TextBlock Classes="muted" Text="{Binding Stats.TodaySalesCaption}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <Border Classes="card tile">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="tileLabel" Text="PENJUALAN BULAN INI" />
+                        <TextBlock Classes="tileValue" Text="{Binding Stats.MonthSalesDisplay}" />
+                        <TextBlock Classes="muted" Text="{Binding Stats.MonthSalesCaption}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <StackPanel Spacing="12">
+                    <TextBlock Classes="sectionTitle" Text="{Binding LowStockTitle}" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding LowStock}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LowStockItem">
+                                        <Border Classes="tableRow">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Classes="cell name" Text="{Binding Name}" />
+                                                <TextBlock Grid.Column="1" Classes="cell stock" Foreground="#C63D34"
+                                                           Text="{Binding StockDisplay}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Margin="16,20" Text="Semua stok green bean aman."
+                                       Foreground="#718279" FontSize="13" IsVisible="{Binding !HasLowStock}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="12">
+                    <TextBlock Classes="sectionTitle" Text="Penjualan Terbaru" />
+                    <Border Classes="card">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{Binding RecentSales}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="models:SaleSummary">
+                                        <Border Classes="tableRow">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel VerticalAlignment="Center" Margin="0,0,0,0">
+                                                    <TextBlock Classes="cell name" Text="{Binding CustomerName}" />
+                                                    <TextBlock Classes="cell" FontSize="11" Text="{Binding SoldAtDisplay}" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Classes="cell stock" Text="{Binding TotalDisplay}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Margin="16,20" Text="Belum ada penjualan."
+                                       Foreground="#718279" FontSize="13" IsVisible="{Binding !HasRecentSales}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

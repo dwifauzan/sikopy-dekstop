@@ -67,7 +67,8 @@
                                FontSize="11" FontWeight="Bold" LetterSpacing="1.5" />
 
                     <!-- Staff-only menus are hidden from customers (IsStaff). -->
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
+                    <Border Classes="navItem" Classes.active="{Binding IsDashboardPage}"
+                            IsVisible="{Binding IsStaff}" Tapped="NavDashboard_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconDashboard}" />
                             <TextBlock Text="Dashboard" />
@@ -100,7 +101,8 @@
                             <TextBlock Text="Riwayat" />
                         </StackPanel>
                     </Border>
-                    <Border Classes="navItem" ToolTip.Tip="Segera hadir" IsVisible="{Binding IsStaff}">
+                    <Border Classes="navItem" Classes.active="{Binding IsUsersPage}"
+                            IsVisible="{Binding IsAdmin}" Tapped="NavUsers_Tapped">
                         <StackPanel Orientation="Horizontal" Spacing="14">
                             <PathIcon Data="{StaticResource IconUsers}" />
                             <TextBlock Text="Pengguna" />

@@ -30,4 +30,14 @@ public partial class MainView : UserControl
     {
         if (DataContext is MainViewModel vm) vm.ShowHistory();
     }
+
+    private void NavDashboard_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.ShowDashboard();
+    }
+
+    private void NavUsers_Tapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm) vm.ShowUsers();
+    }
 }

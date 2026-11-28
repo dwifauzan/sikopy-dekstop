@@ -15,6 +15,8 @@ public partial class MainViewModel : ViewModelBase
     public RoastingViewModel Roasting { get; } = new();
     public ShopWindowViewModel Shop { get; } = new();
     public HistoryViewModel History { get; } = new();
+    public DashboardViewModel Dashboard { get; } = new();
+    public UsersViewModel Users { get; } = new();
 
     private UserAccount? _currentUser;
     public UserAccount? CurrentUser
@@ -26,9 +28,11 @@ public partial class MainViewModel : ViewModelBase
             {
                 Roasting.CurrentUserId = value?.Id;
                 Shop.CurrentUserId = value?.Id;
+                Users.CurrentUserId = value?.Id;
                 Shop.CustomerName = value?.FullName;
                 OnPropertyChanged(nameof(IsAuthenticated));
                 OnPropertyChanged(nameof(IsStaff));
+                OnPropertyChanged(nameof(IsAdmin));
                 OnPropertyChanged(nameof(CurrentUserName));
                 OnPropertyChanged(nameof(CurrentUserRole));
                 OnPropertyChanged(nameof(CurrentUserInitial));
@@ -38,6 +42,7 @@ public partial class MainViewModel : ViewModelBase
 
     public bool IsAuthenticated => CurrentUser is not null;
     public bool IsStaff => CurrentUser is { IsCustomer: false };
+    public bool IsAdmin => CurrentUser is { IsAdmin: true };
     public string CurrentUserName => CurrentUser?.FullName ?? "Admin Roastery";
     public string CurrentUserRole => CurrentUser?.Role ?? "Admin";
     public string CurrentUserInitial => CurrentUser?.Initial ?? "A";
@@ -54,6 +59,8 @@ public partial class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsRoastingPage));
                 OnPropertyChanged(nameof(IsShopPage));
                 OnPropertyChanged(nameof(IsHistoryPage));
+                OnPropertyChanged(nameof(IsDashboardPage));
+                OnPropertyChanged(nameof(IsUsersPage));
             }
         }
     }
@@ -62,6 +69,8 @@ public partial class MainViewModel : ViewModelBase
     public bool IsRoastingPage => CurrentPage == Roasting;
     public bool IsShopPage => CurrentPage == Shop;
     public bool IsHistoryPage => CurrentPage == History;
+    public bool IsDashboardPage => CurrentPage == Dashboard;
+    public bool IsUsersPage => CurrentPage == Users;
 
     public MainViewModel()
     {
@@ -86,6 +95,20 @@ public partial class MainViewModel : ViewModelBase
         if (!IsStaff) return;
         CurrentPage = Roasting;
         _ = Roasting.LoadCommand.ExecuteAsync(null);
+    }
+
+    public void ShowDashboard()
+    {
+        if (!IsStaff) return;
+        CurrentPage = Dashboard;
+        _ = Dashboard.LoadCommand.ExecuteAsync(null);
+    }
+
+    public void ShowUsers()
+    {
+        if (!IsAdmin) return;
+        CurrentPage = Users;
+        _ = Users.LoadCommand.ExecuteAsync(null);
     }
 
     public void ShowHistory()
@@ -120,7 +143,7 @@ public partial class MainViewModel : ViewModelBase
     {
         CurrentUser = user;
         // Customers only get the Etalase.
-        if (IsStaff) ShowRawMaterials();
+        if (IsStaff) ShowDashboard();
         else ShowShop();
     }
     

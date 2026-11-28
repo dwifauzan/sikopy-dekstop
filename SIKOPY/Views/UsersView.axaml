@@ -1,0 +1,228 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SIKOPY.ViewModels"
+             xmlns:models="using:SIKOPY.Models"
+             mc:Ignorable="d" d:DesignWidth="1192" d:DesignHeight="900"
+             x:Class="SIKOPY.Views.UsersView"
+             x:DataType="vm:UsersViewModel"
+             Background="#F4F1EB">
+    <Design.DataContext>
+        <vm:UsersViewModel />
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#DFE6DF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#718279" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.tableHead">
+            <Setter Property="Background" Value="#F7F9F6" />
+            <Setter Property="BorderBrush" Value="#E3E9E2" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="50" />
+        </Style>
+        <Style Selector="Border.tableRow">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#EDF1EB" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Height" Value="52" />
+        </Style>
+        <Style Selector="Border.tableRow:pointerover">
+            <Setter Property="Background" Value="#F9FBF8" />
+        </Style>
+        <Style Selector="TextBlock.cell">
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="#475C50" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <Style Selector="TextBlock.cell.name">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="TextBlock.cell.stock">
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.badge">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="Margin" Value="10,0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge TextBlock">
+            <Setter Property="Foreground" Value="#2D614E" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Border.badge.outgoing">
+            <Setter Property="Background" Value="#FBEAE8" />
+        </Style>
+        <Style Selector="Border.badge.outgoing TextBlock">
+            <Setter Property="Foreground" Value="#C63D34" />
+        </Style>
+        <Style Selector="Border.status">
+            <Setter Property="Background" Value="#FBEAE8" />
+            <Setter Property="BorderBrush" Value="#F2C9C5" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="14,10" />
+        </Style>
+        <Style Selector="Panel.backdrop">
+            <Setter Property="Background" Value="#80183B32" />
+        </Style>
+        <Style Selector="Border.dialog">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="24" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="BoxShadow" Value="0 12 40 0 #33183B32" />
+        </Style>
+        <Style Selector="TextBlock.dialogTitle">
+            <Setter Property="Foreground" Value="#183B32" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style Selector="Border.status.ok">
+            <Setter Property="Background" Value="#E9F3E8" />
+            <Setter Property="BorderBrush" Value="#CFE2D1" />
+        </Style>
+        <Style Selector="Border.badge.inactive">
+            <Setter Property="Background" Value="#F0F1F3" />
+        </Style>
+        <Style Selector="Border.badge.inactive TextBlock">
+            <Setter Property="Foreground" Value="#667085" />
+        </Style>
+        <Style Selector="Button.rowAction">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="40,38" Spacing="20">
+                <StackPanel Spacing="6" MinHeight="72">
+                    <TextBlock Text="Pengguna" Foreground="#183B32" FontSize="30" FontWeight="Bold" />
+                    <TextBlock Text="Kelola peran, password, dan status akun"
+                               Foreground="#718279" FontSize="14" />
+                </StackPanel>
+
+                <Border Classes="status" Classes.ok="{Binding !IsStatusError}" IsVisible="{Binding HasStatus}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <TextBlock Text="{Binding StatusMessage}" FontSize="13" TextWrapping="Wrap"
+                                   Foreground="#183B32" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Classes="iconAction" Background="Transparent"
+                                Content="✕" FontSize="12" ToolTip.Tip="Tutup"
+                                Command="{Binding DismissStatusCommand}" />
+                    </Grid>
+                </Border>
+
+                <Grid ColumnDefinitions="*,Auto" Height="30">
+                    <TextBlock Classes="sectionTitle" Text="Daftar Akun" />
+                    <TextBlock Grid.Column="1" Classes="muted" Text="{Binding CountText}" />
+                </Grid>
+
+                <Border Classes="card">
+                    <StackPanel>
+                        <Border Classes="tableHead">
+                            <Grid ColumnDefinitions="2*,2*,120,110,330">
+                                <TextBlock Grid.Column="0" Classes="tableHeader" Text="NAMA" />
+                                <TextBlock Grid.Column="1" Classes="tableHeader" Text="USERNAME" />
+                                <TextBlock Grid.Column="2" Classes="tableHeader" Text="PERAN" />
+                                <TextBlock Grid.Column="3" Classes="tableHeader" Text="STATUS" />
+                                <TextBlock Grid.Column="4" Classes="tableHeader" Text="AKSI" />
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding Users}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:UserAccount">
+                                    <Border Classes="tableRow">
+                                        <Grid ColumnDefinitions="2*,2*,120,110,330">
+                                            <TextBlock Grid.Column="0" Classes="cell name" Text="{Binding FullName}" />
+                                            <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Username}" />
+                                            <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Role}" />
+                                            <Border Grid.Column="3" Classes="badge" Classes.inactive="{Binding !IsActive}">
+                                                <TextBlock Text="{Binding StatusDisplay}" />
+                                            </Border>
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6"
+                                                        Margin="10,0" VerticalAlignment="Center">
+                                                <Button Classes="secondary rowAction" Content="Ubah peran"
+                                                        Command="{Binding $parent[ItemsControl].((vm:UsersViewModel)DataContext).OpenRoleCommand}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Classes="secondary rowAction" Content="Reset password"
+                                                        Command="{Binding $parent[ItemsControl].((vm:UsersViewModel)DataContext).OpenResetCommand}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Classes="secondary rowAction" Content="{Binding ToggleActiveText}"
+                                                        Command="{Binding $parent[ItemsControl].((vm:UsersViewModel)DataContext).OpenToggleActiveCommand}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ===== Action dialog (role / reset / activate) ===== -->
+        <Panel Classes="backdrop" IsVisible="{Binding IsDialogOpen}">
+            <Border Classes="dialog" Width="460">
+                <StackPanel Spacing="18" Margin="26,24">
+                    <TextBlock Classes="dialogTitle" Text="{Binding DialogTitle}" />
+                    <TextBlock FontSize="13" Foreground="#475C50" TextWrapping="Wrap"
+                               Text="{Binding DialogMessage}" />
+
+                    <StackPanel IsVisible="{Binding IsRoleDialog}">
+                        <TextBlock Classes="fieldLabel" Text="Peran" />
+                        <ComboBox Classes="field" ItemsSource="{Binding Roles}"
+                                  SelectedItem="{Binding SelectedRole}" />
+                    </StackPanel>
+
+                    <Border IsVisible="{Binding HasNewPassword}" Background="#F1F7F0"
+                            BorderBrush="#D5E7D4" BorderThickness="1" CornerRadius="10" Padding="14,12">
+                        <SelectableTextBlock Text="{Binding NewPassword}" FontSize="18" FontWeight="Bold"
+                                             FontFamily="Menlo, Consolas, monospace" Foreground="#183B32"
+                                             HorizontalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Classes="formError" Text="{Binding DialogError}"
+                               IsVisible="{Binding HasDialogError}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsConfirmStep}">
+                            <Button Classes="secondary" Content="Batal" Command="{Binding CloseDialogCommand}" />
+                            <Button Classes.primary="{Binding !IsDangerAction}" Classes.danger="{Binding IsDangerAction}"
+                                    Content="{Binding DialogConfirmText}" Command="{Binding ConfirmCommand}" />
+                        </StackPanel>
+                        <Button Classes="primary" Content="Selesai" IsVisible="{Binding HasNewPassword}"
+                                Command="{Binding CloseDialogCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Grid>
+</UserControl>

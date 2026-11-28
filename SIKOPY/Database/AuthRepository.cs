@@ -23,7 +23,7 @@ public sealed class AuthRepository
             """
             SELECT id_pengguna, nama_pengguna, kata_sandi, nama_lengkap, peran
             FROM pengguna
-            WHERE nama_pengguna = @username
+            WHERE nama_pengguna = @username AND is_aktif = TRUE
             LIMIT 1;
             """,
             connection);

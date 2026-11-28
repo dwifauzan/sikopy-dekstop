@@ -159,17 +159,26 @@ For a new database, `database/schema.sql` already includes these constraints.
 
 ## Users and roles
 
-Accounts created from the app's **Daftar** page get the role `Pelanggan`
-(customer). Customers cannot open Bahan Baku or Batch Roasting. Every other
-role is staff. To create the first staff account, register it in the app,
-then promote it:
+Roles are `Pelanggan` (customer), `Staf` and `Admin`. Accounts created from
+the app's **Daftar** page are `Pelanggan` and only see the Etalase. `Staf` and
+`Admin` see every staff screen; only `Admin` sees **Pengguna**, where accounts
+can get a new role, a new random password, or be deactivated
+(`is_aktif = FALSE`, login refused). The last active admin cannot be demoted
+or deactivated.
+
+To create the first admin, register in the app, then promote the account:
 
 ```sql
 UPDATE pengguna SET peran = 'Admin' WHERE nama_pengguna = 'your_username';
 ```
 
-There is no self-service password reset. An admin resets a password (for now
-directly in the database, later from the Pengguna screen).
+There is no self-service password reset; ask an admin.
+
+For an existing database, run this migration once (it adds `pengguna.is_aktif`):
+
+```text
+database/migrations/003_user_active_flag.sql
+```
 
 ## Connecting the application
 

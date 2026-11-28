@@ -22,7 +22,8 @@ CREATE TABLE pengguna (
     nama_pengguna VARCHAR(50)  NOT NULL UNIQUE,
     kata_sandi    VARCHAR(255) NOT NULL,
     nama_lengkap  VARCHAR(100) NOT NULL,
-    peran         VARCHAR(30)  NOT NULL
+    peran         VARCHAR(30)  NOT NULL,
+    is_aktif      BOOLEAN      NOT NULL DEFAULT TRUE
 );
 
 -- ---------- Biji kopi mentah ----------
